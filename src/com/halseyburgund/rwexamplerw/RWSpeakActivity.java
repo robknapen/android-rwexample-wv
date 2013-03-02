@@ -19,7 +19,7 @@
  	You should have received a copy of the GNU General Public License
  	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */ 		
-package com.halseyburgund.rwexample;
+package com.halseyburgund.rwexamplerw;
 
 import android.app.AlertDialog;
 import android.app.ListActivity;
@@ -43,6 +43,7 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWRecordingTask;
 import com.halseyburgund.rwframework.core.RWService;
@@ -58,7 +59,7 @@ public class RWSpeakActivity extends ListActivity {
 	private final static String ROUNDWARE_TAGS_TYPE = "speak";
 	
 	// settings for storing recording as file
-	private final static String STORAGE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/rwdemo/";
+	private final static String STORAGE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/rwexamplerw/";
 
     // fields
 	private TextView headerLine2TextView;
@@ -86,7 +87,7 @@ public class RWSpeakActivity extends ListActivity {
 			// create a tags list for display and selection
 			projectTags = rwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
 			tagsList = new RWList(projectTags);
-			tagsList.restoreSelectionState(getSharedPreferences(RWExampleActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 
 			updateUIState();
 			updateTagsSpinner(ROUNDWARE_TAGS_TYPE);
@@ -145,7 +146,7 @@ public class RWSpeakActivity extends ListActivity {
 		super.onPause();
 		unregisterReceiver(rwReceiver);
 		if (tagsList != null) {
-			tagsList.saveSelectionState(getSharedPreferences(RWExampleActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			tagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 		}
 	}
 
@@ -246,7 +247,7 @@ public class RWSpeakActivity extends ListActivity {
 		closeButton = (Button) findViewById(R.id.speak_close_button);
 		closeButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Intent homeIntent = new Intent(RWSpeakActivity.this, RWExampleActivity.class);
+				Intent homeIntent = new Intent(RWSpeakActivity.this, RWExampleWebViewsActivity.class);
 				RWSpeakActivity.this.startActivity(homeIntent);
 			}
 		});

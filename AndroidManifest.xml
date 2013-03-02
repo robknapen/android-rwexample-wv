@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-      package="com.halseyburgund.rwexample"
-      android:versionCode="21"
-      android:versionName="1.1.1">
+      package="com.halseyburgund.rwexamplerw"
+      android:versionCode="1"
+      android:versionName="0.0.1">
 
-    <uses-sdk android:minSdkVersion="7" />
+    <uses-sdk android:minSdkVersion="7" android:targetSdkVersion="17" />
 
     <!-- Required user permissions -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -15,11 +15,11 @@
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher">
+    <application android:label="@string/app_name" android:icon="@drawable/ic_launcher" android:allowBackup="false">
 
-        <service android:enabled="true" android:name="com.halseyburgund.rwframework.core.RWService" requires-permission="true" />
+        <service android:enabled="true" android:name="com.halseyburgund.rwframework.core.RWService" />
 
-        <activity android:name=".RWExampleActivity"
+        <activity android:name="com.halseyburgund.rwexamplerw.RWExampleWebViewsActivity"
                   android:label="@string/app_name"
                   android:launchMode="singleTask"
                   android:clearTaskOnLaunch="true"
@@ -32,12 +32,12 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".RWPreferenceActivity"
+        <activity android:name="com.halseyburgund.rwexamplerw.RWPreferenceActivity"
                   android:label="@string/preferences"
                 >
         </activity>
 
-        <activity android:name=".RWListenActivity"
+        <activity android:name="com.halseyburgund.rwexamplerw.RWListenActivity"
                   android:label="@string/listen_activity_label"
                   android:screenOrientation="portrait"
                   android:theme="@android:style/Theme.NoTitleBar"
@@ -46,7 +46,7 @@
             </intent-filter>
         </activity>
 
-        <activity android:name=".RWSpeakActivity"
+        <activity android:name="com.halseyburgund.rwexamplerw.RWSpeakActivity"
                   android:label="@string/speak_activity_label"
                   android:screenOrientation="portrait"
                   android:theme="@android:style/Theme.NoTitleBar"

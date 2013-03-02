@@ -19,7 +19,7 @@
  	You should have received a copy of the GNU General Public License
  	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.halseyburgund.rwexample;
+package com.halseyburgund.rwexamplerw;
 
 import java.util.UUID;
 
@@ -46,15 +46,16 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.util.RWList;
 
 
-public class RWExampleActivity extends Activity {
+public class RWExampleWebViewsActivity extends Activity {
 
 	// name of shared preferences used by all activities in the app
-	public final static String APP_SHARED_PREFS = "com.halseyburgund.rwexample.preferences";
+	public final static String APP_SHARED_PREFS = "com.halseyburgund.rwexamplerw.preferences";
 	
 	// menu items
 	private final static int MENU_ITEM_PREFERENCES = Menu.FIRST;
@@ -240,7 +241,7 @@ public class RWExampleActivity extends Activity {
 		showProgress(getString(R.string.initializing), getString(R.string.connecting_to_server_message), true, true);
 		try {
 			// create connection to the RW service
-			Intent bindIntent = new Intent(RWExampleActivity.this, RWService.class);
+			Intent bindIntent = new Intent(RWExampleWebViewsActivity.this, RWService.class);
 			bindService(bindIntent, rwConnection, Context.BIND_AUTO_CREATE);
 
 			// create the intent to start the RW service
@@ -300,7 +301,7 @@ public class RWExampleActivity extends Activity {
 		listenButton = (Button) findViewById(R.id.listen_button);
 		listenButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Intent intent = new Intent(RWExampleActivity.this, RWListenActivity.class);
+				Intent intent = new Intent(RWExampleWebViewsActivity.this, RWListenActivity.class);
 				startActivity(intent);
 			}
 		});
@@ -308,7 +309,7 @@ public class RWExampleActivity extends Activity {
 		speakButton = (Button) findViewById(R.id.speak_button);
 		speakButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Intent intent = new Intent(RWExampleActivity.this, RWSpeakActivity.class);
+				Intent intent = new Intent(RWExampleWebViewsActivity.this, RWSpeakActivity.class);
 				startActivity(intent);
 			}
 		});

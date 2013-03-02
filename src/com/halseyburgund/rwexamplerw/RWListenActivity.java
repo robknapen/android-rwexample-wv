@@ -19,7 +19,7 @@
  	You should have received a copy of the GNU General Public License
  	along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.halseyburgund.rwexample;
+package com.halseyburgund.rwexamplerw;
 
 import android.app.ListActivity;
 import android.app.ProgressDialog;
@@ -42,6 +42,7 @@ import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.core.RWTags;
@@ -85,7 +86,7 @@ public class RWListenActivity extends ListActivity {
 			// create a tags list for display and selection
 			projectTags = rwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
 			tagsList = new RWList(projectTags);
-			tagsList.restoreSelectionState(getSharedPreferences(RWExampleActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 			
 			updateUIState();
 			updateTagsSpinner(ROUNDWARE_TAGS_TYPE);
@@ -153,7 +154,7 @@ public class RWListenActivity extends ListActivity {
 		super.onPause();
 		unregisterReceiver(rwReceiver);
 		if (tagsList != null) {
-			tagsList.saveSelectionState(getSharedPreferences(RWExampleActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			tagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 		}
 	}
 
@@ -259,7 +260,7 @@ public class RWListenActivity extends ListActivity {
 		closeButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				rwBinder.playbackStop();
-				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleActivity.class);
+				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
 				RWListenActivity.this.startActivity(homeIntent);
 			}
 		});

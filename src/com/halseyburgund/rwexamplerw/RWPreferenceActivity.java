@@ -19,7 +19,9 @@
  	You should have received a copy of the GNU General Public License
  	along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */ 		
-package com.halseyburgund.rwexample;
+package com.halseyburgund.rwexamplerw;
+
+import com.halseyburgund.rwexamplerw.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
