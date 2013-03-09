@@ -21,7 +21,8 @@
  */
 package com.halseyburgund.rwexamplerw;
 
-import android.app.ListActivity;
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -30,30 +31,29 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.core.RWTags;
-import com.halseyburgund.rwframework.core.RWTags.RWTag;
 import com.halseyburgund.rwframework.util.RWList;
-import com.halseyburgund.rwframework.util.RWListAdapter;
-import com.halseyburgund.rwframework.util.RWListItem;
 
 
-public class RWListenActivity extends ListActivity {
+public class RWListenActivity extends Activity {
 
+	private final static String TAG = "Listen";
+	
 	// Roundware tag type used in this activity
 	private final static String ROUNDWARE_TAGS_TYPE = "listen";
 	
@@ -61,14 +61,17 @@ public class RWListenActivity extends ListActivity {
 	private ProgressDialog progressDialog;
 	private TextView headerLine2TextView;
 	private TextView headerLine3TextView;
-	private Spinner tagsSpinner;
+	private WebView filterWebView;
 	private Button playButton;
-	private Button pauseButton;
-	private Button closeButton;
+	private Button homeButton;
+	private Button refineButton;
+//	private Button likeButton;
+//	private Button flagButton;
 	private int volumeLevel = 80;
 	private RWService rwBinder;
 	private RWTags projectTags;
 	private RWList tagsList;
+	private String contentFileDir;
 
 	
 	/**
@@ -77,6 +80,7 @@ public class RWListenActivity extends ListActivity {
 	 * by another activity and we only need to connect to it.
 	 */
 	private ServiceConnection rwConnection = new ServiceConnection() {
+		@SuppressLint("SetJavaScriptEnabled")
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
 			rwBinder = ((RWService.RWServiceBinder) service).getService();
@@ -87,9 +91,22 @@ public class RWListenActivity extends ListActivity {
 			projectTags = rwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
 			tagsList = new RWList(projectTags);
 			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+
+			// get the folder where the web content files are stored
+			contentFileDir = rwBinder.getContentFilesDir();
+			if ((filterWebView != null) && (contentFileDir != null)) {
+				WebSettings webSettings = filterWebView.getSettings();
+				webSettings.setJavaScriptEnabled(true);
+
+				filterWebView.setWebViewClient(new ListenWebViewClient());
+				
+				contentFileDir = "file://" + rwBinder.getContentFilesDir() + "listen.html";
+				Log.d(TAG, "Loading content from: " + contentFileDir);
+				filterWebView.loadUrl(contentFileDir);
+			}
 			
 			updateUIState();
-			updateTagsSpinner(ROUNDWARE_TAGS_TYPE);
+//			updateTagsSpinner(ROUNDWARE_TAGS_TYPE);
 		}
 
 		@Override
@@ -132,6 +149,23 @@ public class RWListenActivity extends ListActivity {
 	};
 	
 	
+	private class ListenWebViewClient extends WebViewClient {
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			Log.d(TAG, "WebView clicked - url: " + url);
+			
+			if (Uri.parse(url).getScheme().equals("roundware")) {
+				Log.d(TAG, "roundware internal processing");
+				return true;
+			}
+			
+			// TODO: Open in external browser?
+			
+			return super.shouldOverrideUrlLoading(view, url);
+		}
+	}
+	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -165,6 +199,8 @@ public class RWListenActivity extends ListActivity {
 
 		IntentFilter filter = new IntentFilter();
 		filter.addAction(RW.READY_TO_PLAY);
+		filter.addAction(RW.SESSION_ON_LINE);
+		filter.addAction(RW.CONTENT_LOADED);
 		filter.addAction(RW.SESSION_OFF_LINE);
 		filter.addAction(RW.UNABLE_TO_PLAY);
 		filter.addAction(RW.ERROR_MESSAGE);
@@ -185,25 +221,25 @@ public class RWListenActivity extends ListActivity {
 	}
 
 
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		// let the list decide if the item can be (de)selected
-		RWListItem q = (RWListItem) l.getItemAtPosition((int) id);
-		RWList displayedItems = ((RWListAdapter) l.getAdapter()).getDisplayedItems();
-		if (q.isOn()) {
-			displayedItems.deselect(q);
-		} else {
-			displayedItems.select(q);
-		}
-		l.invalidateViews();
-
-		// request update of audio stream directly when needed
-		if ((rwBinder != null) && (tagsList.hasValidSelectionsForTags())) {
-			if (rwBinder.isPlaying()) {
-				new ModifyStreamTask(tagsList, getString(R.string.modify_stream_problem)).execute();
-			}
-		}
-	}
+//	@Override
+//	protected void onListItemClick(ListView l, View v, int position, long id) {
+//		// let the list decide if the item can be (de)selected
+//		RWListItem q = (RWListItem) l.getItemAtPosition((int) id);
+//		RWList displayedItems = ((RWListAdapter) l.getAdapter()).getDisplayedItems();
+//		if (q.isOn()) {
+//			displayedItems.deselect(q);
+//		} else {
+//			displayedItems.select(q);
+//		}
+//		l.invalidateViews();
+//
+//		// request update of audio stream directly when needed
+//		if ((rwBinder != null) && (tagsList.hasValidSelectionsForTags())) {
+//			if (rwBinder.isPlaying()) {
+//				new ModifyStreamTask(tagsList, getString(R.string.modify_stream_problem)).execute();
+//			}
+//		}
+//	}
 	
 
 	/**
@@ -214,23 +250,30 @@ public class RWListenActivity extends ListActivity {
 		headerLine2TextView = (TextView) findViewById(R.id.header_line2_textview);
 		headerLine3TextView = (TextView) findViewById(R.id.header_line3_textview);
 		
-		tagsSpinner = (Spinner) findViewById(R.id.tags_spinner);
-		tagsSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
-			@Override
-			public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-				Object selection = tagsSpinner.getSelectedItem();
-				if (selection instanceof RWTag) {
-					RWTag tag = (RWTag) selection;
-					updateTagsDisplay(tag.code, tag.type);
-				}
-			}
-
-			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {
-				// void
-			}
-		});
+		filterWebView = (WebView) findViewById(R.id.filter_webview);
 		
+		
+//		tagsSpinner = (Spinner) findViewById(R.id.tags_spinner);
+//		tagsSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+//			@Override
+//			public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
+//				Object selection = tagsSpinner.getSelectedItem();
+//				if (selection instanceof RWTag) {
+//					RWTag tag = (RWTag) selection;
+//					updateTagsDisplay(tag.code, tag.type);
+//				}
+//			}
+//
+//			@Override
+//			public void onNothingSelected(AdapterView<?> arg0) {
+//				// void
+//			}
+//		});
+		
+		
+		refineButton = (Button) findViewById(R.id.refine_button);
+
+
 		playButton = (Button) findViewById(R.id.play_button);
 		playButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -240,24 +283,18 @@ public class RWListenActivity extends ListActivity {
 						rwBinder.playbackStart(null);
 					}
 					rwBinder.playbackFadeIn(volumeLevel);
-				}
-				updateUIState();
-			}
-		});
-
-		pauseButton = (Button) findViewById(R.id.pause_button);
-		pauseButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				if (rwBinder.isPlaying()) {
+					playButton.setText(R.string.pause);
+				} else {
 					volumeLevel = rwBinder.getVolumeLevel();
 					rwBinder.playbackFadeOut();
+					playButton.setText(R.string.play);
 				}
 				updateUIState();
 			}
 		});
 
-		closeButton = (Button) findViewById(R.id.close_button);
-		closeButton.setOnClickListener(new View.OnClickListener() {
+		homeButton = (Button) findViewById(R.id.home_button);
+		homeButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				rwBinder.playbackStop();
 				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
@@ -275,15 +312,18 @@ public class RWListenActivity extends ListActivity {
 		if (rwBinder == null) {
 			// not connected to RWService
 			playButton.setEnabled(false);
-			pauseButton.setEnabled(false);
-			tagsSpinner.setEnabled(false);
+			refineButton.setEnabled(false);
+//			tagsSpinner.setEnabled(false);
 			headerLine2TextView.setText(R.string.off_line);
 		} else {
+			// TODO: pass listen.html to web view
+			// contentFileDir
+			
 			// connected to RWService
 			boolean isPlaying = rwBinder.isPlaying();
 			playButton.setEnabled(!isPlaying);
-			pauseButton.setEnabled(isPlaying);
-			tagsSpinner.setEnabled(true);
+			refineButton.setEnabled(true);
+//			tagsSpinner.setEnabled(true);
 			
 			if (isPlaying) {
 				if (rwBinder.isPlayingStaticSoundtrack()) {
@@ -331,15 +371,15 @@ public class RWListenActivity extends ListActivity {
 	 * 
 	 * @param type of tags to be displayed
 	 */
-	private void updateTagsSpinner(String type) {
-		if ((tagsSpinner != null) && (projectTags != null)) {
-			RWTags tags = projectTags.filterByType(type);
-			tags.sortByOrder();
-			ArrayAdapter<RWTag> tagsAdapter = new ArrayAdapter<RWTag>(this, android.R.layout.simple_spinner_item, tags.getTags());
-			tagsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			tagsSpinner.setAdapter(tagsAdapter);
-		}
-	}
+//	private void updateTagsSpinner(String type) {
+//		if ((tagsSpinner != null) && (projectTags != null)) {
+//			RWTags tags = projectTags.filterByType(type);
+//			tags.sortByOrder();
+//			ArrayAdapter<RWTag> tagsAdapter = new ArrayAdapter<RWTag>(this, android.R.layout.simple_spinner_item, tags.getTags());
+//			tagsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+//			tagsSpinner.setAdapter(tagsAdapter);
+//		}
+//	}
 
 
 	/**
@@ -349,15 +389,15 @@ public class RWListenActivity extends ListActivity {
 	 * @param code of tag to display options of (e.g. "demo")
 	 * @param type of tag to display options of (e.g. "listen")
 	 */
-	private void updateTagsDisplay(String code, String type) {
-		if ((projectTags != null) && (tagsList != null)) {
-			setListAdapter(
-				new RWListAdapter(getBaseContext(), tagsList, 
-					projectTags.findTagByCodeAndType(code, type), 
-					R.layout.list_item)
-			);
-		}
-	}
+//	private void updateTagsDisplay(String code, String type) {
+//		if ((projectTags != null) && (tagsList != null)) {
+//			setListAdapter(
+//				new RWListAdapter(getBaseContext(), tagsList, 
+//					projectTags.findTagByCodeAndType(code, type), 
+//					R.layout.list_item)
+//			);
+//		}
+//	}
 	
 	
 	/**
