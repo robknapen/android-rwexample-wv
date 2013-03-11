@@ -21,6 +21,12 @@
  */
 package com.halseyburgund.rwexamplerw;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -30,26 +36,34 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
+import android.view.Window;
+import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ViewFlipper;
 
 import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.core.RWTags;
+import com.halseyburgund.rwframework.core.RWTags.RWOption;
+import com.halseyburgund.rwframework.core.RWTags.RWTag;
 import com.halseyburgund.rwframework.util.RWList;
 
 
+@SuppressLint("SetJavaScriptEnabled")
 public class RWListenActivity extends Activity {
 
 	private final static String TAG = "Listen";
@@ -59,6 +73,7 @@ public class RWListenActivity extends Activity {
 	
 	// fields
 	private ProgressDialog progressDialog;
+	private ViewFlipper viewFlipper;
 	private TextView headerLine2TextView;
 	private TextView headerLine3TextView;
 	private WebView filterWebView;
@@ -95,14 +110,17 @@ public class RWListenActivity extends Activity {
 			// get the folder where the web content files are stored
 			contentFileDir = rwBinder.getContentFilesDir();
 			if ((filterWebView != null) && (contentFileDir != null)) {
-				WebSettings webSettings = filterWebView.getSettings();
-				webSettings.setJavaScriptEnabled(true);
-
-				filterWebView.setWebViewClient(new ListenWebViewClient());
-				
-				contentFileDir = "file://" + rwBinder.getContentFilesDir() + "listen.html";
-				Log.d(TAG, "Loading content from: " + contentFileDir);
-				filterWebView.loadUrl(contentFileDir);
+				String contentFileName = rwBinder.getContentFilesDir() + "listen.html";
+				Log.d(TAG, "Content filename: " + contentFileName);
+				try {
+					String data = grabAsSingleString(new File(contentFileName));
+					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
+					filterWebView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
+				} catch (FileNotFoundException e) {
+					Log.e(TAG, "No content to load, missing file: " + contentFileName);
+					// TODO: dialog?? error??
+					filterWebView.loadUrl("file://" + contentFileName);
+				}
 			}
 			
 			updateUIState();
@@ -114,6 +132,42 @@ public class RWListenActivity extends Activity {
 			rwBinder = null;
 		}
 	};
+	
+	
+	public static final String grabAsSingleString(File fileName) throws FileNotFoundException {
+
+        BufferedReader reader = null;
+        String returnString = null;
+
+        try {
+            reader = new BufferedReader(new FileReader(fileName));
+            char[] charArray = null;
+
+            if(fileName.length() > Integer.MAX_VALUE) {
+                // TODO implement handling of large files.
+                System.out.println("The file is larger than int max = " + Integer.MAX_VALUE);
+            } else {
+                charArray = new char[(int)fileName.length()];
+                reader.read(charArray, 0, (int)fileName.length());
+                returnString = new String(charArray);
+
+            }
+        } catch (FileNotFoundException ex) {
+            throw ex;
+        } catch(IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+            	if (reader != null) {
+            		reader.close();
+            	}
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+
+        return returnString;
+    }	
 	
 
 	/**
@@ -149,26 +203,12 @@ public class RWListenActivity extends Activity {
 	};
 	
 	
-	private class ListenWebViewClient extends WebViewClient {
-		@Override
-		public boolean shouldOverrideUrlLoading(WebView view, String url) {
-			Log.d(TAG, "WebView clicked - url: " + url);
-			
-			if (Uri.parse(url).getScheme().equals("roundware")) {
-				Log.d(TAG, "roundware internal processing");
-				return true;
-			}
-			
-			// TODO: Open in external browser?
-			
-			return super.shouldOverrideUrlLoading(view, url);
-		}
-	}
-	
-	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		getWindow().requestFeature(Window.FEATURE_PROGRESS);
+		
 		setContentView(R.layout.listen);
 		setVolumeControlStream(AudioManager.STREAM_MUSIC);
 		initUIWidgets();
@@ -252,6 +292,58 @@ public class RWListenActivity extends Activity {
 		
 		filterWebView = (WebView) findViewById(R.id.filter_webview);
 		
+		WebSettings webSettings = filterWebView.getSettings();
+		webSettings.setJavaScriptEnabled(true);
+
+		filterWebView.setWebViewClient(new WebViewClient() {
+			@Override
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				Uri uri = Uri.parse(url);
+				if (uri.getScheme().equals("roundware")) {
+					Log.d(TAG, "Processing roundware uri: " + url);
+					String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
+					// format: roundware://listen_done
+					if ("//listen_done".equalsIgnoreCase(schemeSpecificPart)) {
+						// TODO: Send modify_stream here?
+						viewFlipper.showPrevious();
+					} else {
+						if (tagsList != null) {
+							tagsList.setSelectionFromWebViewMessageUri(uri);
+						}
+					}
+					return true;
+				}
+				// TODO: Open link in external browser?
+				return super.shouldOverrideUrlLoading(view, url);
+			}
+
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				if (refineButton != null) {
+					refineButton.setEnabled(true);
+				}
+				super.onPageFinished(view, url);
+			}
+
+			@Override
+			public void onPageStarted(WebView view, String url, Bitmap favicon) {
+				if (refineButton != null) {
+					refineButton.setEnabled(false);
+				}
+				super.onPageStarted(view, url, favicon);
+			}
+
+			@Override
+			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+				Log.e(TAG, "Page load error: " + description);
+				if (refineButton != null) {
+					refineButton.setEnabled(false);
+				}
+				super.onReceivedError(view, errorCode, description, failingUrl);
+			}
+		});
+		
+		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
 		
 //		tagsSpinner = (Spinner) findViewById(R.id.tags_spinner);
 //		tagsSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
@@ -272,7 +364,14 @@ public class RWListenActivity extends Activity {
 		
 		
 		refineButton = (Button) findViewById(R.id.refine_button);
-
+		refineButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				if (viewFlipper != null) {
+					viewFlipper.showNext();
+				}
+			}
+		});
 
 		playButton = (Button) findViewById(R.id.play_button);
 		playButton.setOnClickListener(new View.OnClickListener() {

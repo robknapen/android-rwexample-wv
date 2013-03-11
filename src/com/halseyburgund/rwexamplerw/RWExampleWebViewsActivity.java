@@ -118,10 +118,14 @@ public class RWExampleWebViewsActivity extends Activity {
 					progressDialog.dismiss();
 				}
 			} else if (RW.CONFIGURATION_LOADED.equals(intent.getAction())) {
-				headerLine2TextView.setText(rwBinder.getConfiguration().getProjectName());
+				if (headerLine2TextView != null) {
+					headerLine2TextView.setText(rwBinder.getConfiguration().getProjectName());
+				}
 				updateUIState(connected);
 			} else if (RW.NO_CONFIGURATION.equals(intent.getAction())) {
-				headerLine2TextView.setText(R.string.no_project_info);
+				if (headerLine2TextView != null) {
+					headerLine2TextView.setText(R.string.no_project_info);
+				}
 				updateUIState(false);
 				showMessage(getString(R.string.unable_to_retrieve_configuration), true, true);
 			} else if (RW.TAGS_LOADED.equals(intent.getAction())) {

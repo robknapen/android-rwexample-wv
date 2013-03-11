@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="rw_spec_server_url">http://rwdev.dyndns.org/roundware/</string>
-	<string name="rw_spec_project_id">1</string>
+	<string name="rw_spec_project_id">6</string>
 
 	<!-- some sample settings for testing -->
     <string name="rw_spec_files_url">http://halseyburgund.com/dev/sfms/masonry/webview-dev/sfms.zip</string>

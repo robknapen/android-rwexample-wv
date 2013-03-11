@@ -1,24 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ViewFlipper xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/viewFlipper"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
     android:background="#FFF"
     android:orientation="vertical" >
 
-	<!-- Refine filter screen -->    
-
-    <LinearLayout
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:orientation="vertical" >
-
-        <WebView
-            android:id="@+id/filter_webview"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-	</LinearLayout>
-    
     <!-- Main Listen screen -->
     
     <LinearLayout
@@ -116,16 +103,6 @@
 
         <!-- Button bar at the bottom -->
 
-        <android.support.v7.widget.Space
-            android:id="@+id/space1"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <android.support.v7.widget.Space
-            android:id="@+id/space2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
         <LinearLayout
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
@@ -159,5 +136,19 @@
                 android:text="@string/flag" />
         </LinearLayout>
     </LinearLayout>
+    
+	<!-- Refine filter screen -->    
+
+    <LinearLayout
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:orientation="vertical" >
+
+        <WebView
+            android:id="@+id/filter_webview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+	</LinearLayout>
 
 </ViewFlipper>
