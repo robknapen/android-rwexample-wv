@@ -27,7 +27,7 @@
                 android:id="@+id/home_button"
                 android:layout_width="80dip"
                 android:layout_height="wrap_content"
-                android:background="@drawable/thin_rounded_border"
+                android:background="@drawable/thin_border_selector"
                 android:text="@string/home"
                 android:textColor="#FFF" />
 
@@ -44,7 +44,7 @@
                 android:id="@+id/refine_button"
                 android:layout_width="80dip"
                 android:layout_height="wrap_content"
-                android:background="@drawable/thin_rounded_border"
+                android:background="@drawable/thin_border_selector"
                 android:text="@string/refine"
                 android:textColor="#FFF" />
 

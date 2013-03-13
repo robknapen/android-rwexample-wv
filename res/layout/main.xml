@@ -16,7 +16,7 @@
             android:gravity="center_horizontal"
             android:textAppearance="@android:style/TextAppearance.Large"
             android:text="@string/main_activity_label"
-            android:background="#000"
+            android:background="#1C4F84"
             />
 
     <!-- info lines -->
@@ -57,6 +57,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+				android:background="@drawable/thin_border_selector"
                 android:text="@string/listen"
                 />
         <Button
@@ -64,6 +65,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+				android:background="@drawable/thin_border_selector"
                 android:text="@string/speak"
                 />
         <Button
@@ -71,6 +73,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+				android:background="@drawable/thin_border_selector"
                 android:text="@string/quit"
                 />
     </LinearLayout>

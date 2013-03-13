@@ -76,6 +76,7 @@ public class RWSpeakActivity extends Activity {
 	private ViewFlipper viewFlipper;
 	private WebView webView;
 	private TextView headerLine2TextView;
+	private Button agreeButton;
 	private ToggleButton recordButton;
 	private Button rerecordButton;
 	private Button uploadButton;
@@ -248,6 +249,14 @@ public class RWSpeakActivity extends Activity {
 		headerLine2TextView = (TextView)findViewById(R.id.header_line2_textview);
 
 		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+
+		agreeButton = (Button) findViewById(R.id.agree_button);
+		agreeButton.setOnClickListener(new View.OnClickListener() {
+			@Override
+			public void onClick(View v) {
+				viewFlipper.showNext();
+			}
+		});
 		
 		webView = (WebView) findViewById(R.id.tagging_webview);
 		WebSettings webSettings = webView.getSettings();
@@ -300,12 +309,18 @@ public class RWSpeakActivity extends Activity {
 			@Override
 			public void onPageFinished(WebView view, String url) {
 				Log.d(TAG, "onPageFinished");
+				if (agreeButton != null) {
+					agreeButton.setEnabled(true);
+				}
 				super.onPageFinished(view, url);
 			}
 
 			@Override
 			public void onPageStarted(WebView view, String url, Bitmap favicon) {
 				Log.d(TAG, "onPageStarted");
+				if (agreeButton != null) {
+					agreeButton.setEnabled(false);
+				}
 				super.onPageStarted(view, url, favicon);
 			}
 
@@ -377,6 +392,12 @@ public class RWSpeakActivity extends Activity {
 			rerecordButton.setEnabled(false);
 			uploadButton.setEnabled(false);
 		} else {
+			// update legal agreement text
+			TextView tx = (TextView) findViewById(R.id.legal_agreement_textview);
+			if (tx != null) {
+				tx.setText(rwBinder.getConfiguration().getLegalAgreement());
+			}
+			
 			// connected to RWService
 			if (!tagsList.hasValidSelectionsForTags()) {
 				recordButton.setEnabled(false);
