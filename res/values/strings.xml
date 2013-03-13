@@ -3,7 +3,7 @@
     <string name="app_name">RW Demo</string>
     <string name="main_activity_label">Roundware Demo App</string>
     <string name="listen_activity_label">Listen</string>
-    <string name="speak_activity_label">Speak</string>
+    <string name="speak_activity_label">Record</string>
         
     <string name="notification_title">RW</string>
     <string name="notification_default_text">Press to return to RW Demo</string>
@@ -19,12 +19,15 @@
     <string name="flag">Flag</string>
     <string name="like">Like</string>
     <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
     <string name="listen">Listen</string>
     <string name="speak">Speak</string>
     <string name="quit">Quit</string>
     <string name="record">Record</string>
+    <string name="rerecord">Re-record</string>
     <string name="stop">Stop</string>
     <string name="submit">Submit</string>
+    <string name="upload">Upload</string>
     <string name="off_line">Off Line</string>
     <string name="on_line">On Line</string>
     <string name="updating">Updating</string>

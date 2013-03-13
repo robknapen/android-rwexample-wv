@@ -51,6 +51,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.ToggleButton;
 import android.widget.ViewFlipper;
 
 import com.halseyburgund.rwexamplerw.R;
@@ -60,7 +61,6 @@ import com.halseyburgund.rwframework.core.RWTags;
 import com.halseyburgund.rwframework.util.RWList;
 
 
-@SuppressLint("SetJavaScriptEnabled")
 public class RWListenActivity extends Activity {
 
 	private final static String TAG = "Listen";
@@ -74,11 +74,11 @@ public class RWListenActivity extends Activity {
 	private TextView headerLine2TextView;
 	private TextView headerLine3TextView;
 	private WebView filterWebView;
-	private Button playButton;
+	private ToggleButton playButton;
 	private Button homeButton;
 	private Button refineButton;
-//	private Button likeButton;
-//	private Button flagButton;
+	private ToggleButton likeButton;
+	private ToggleButton flagButton;
 	private int volumeLevel = 80;
 	private RWService rwBinder;
 	private RWTags projectTags;
@@ -261,6 +261,7 @@ public class RWListenActivity extends Activity {
 	 * Sets up the primary UI widgets (spinner and buttons), and how to
 	 * handle interactions.
 	 */
+	@SuppressLint("SetJavaScriptEnabled")
 	private void initUIWidgets() {
 		headerLine2TextView = (TextView) findViewById(R.id.header_line2_textview);
 		headerLine3TextView = (TextView) findViewById(R.id.header_line3_textview);
@@ -346,6 +347,15 @@ public class RWListenActivity extends Activity {
 		});
 		
 		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+
+		homeButton = (Button) findViewById(R.id.home_button);
+		homeButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				rwBinder.playbackStop();
+				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
+				RWListenActivity.this.startActivity(homeIntent);
+			}
+		});
 		
 		refineButton = (Button) findViewById(R.id.refine_button);
 		refineButton.setOnClickListener(new View.OnClickListener() {
@@ -357,7 +367,7 @@ public class RWListenActivity extends Activity {
 			}
 		});
 
-		playButton = (Button) findViewById(R.id.play_button);
+		playButton = (ToggleButton) findViewById(R.id.play_button);
 		playButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				if (!rwBinder.isPlaying()) {
@@ -366,24 +376,23 @@ public class RWListenActivity extends Activity {
 						rwBinder.playbackStart(null);
 					}
 					rwBinder.playbackFadeIn(volumeLevel);
-					playButton.setText(R.string.pause);
+					// playButton.setChecked(true);
 				} else {
 					volumeLevel = rwBinder.getVolumeLevel();
 					rwBinder.playbackFadeOut();
-					playButton.setText(R.string.play);
+					// playButton.setChecked(false);
 				}
 				updateUIState();
 			}
 		});
 
-		homeButton = (Button) findViewById(R.id.home_button);
-		homeButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				rwBinder.playbackStop();
-				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
-				RWListenActivity.this.startActivity(homeIntent);
-			}
-		});
+		flagButton = (ToggleButton) findViewById(R.id.flag_button);
+		// TODO: add button click handler for flagging recordings
+		flagButton.setEnabled(false);
+		
+		likeButton = (ToggleButton) findViewById(R.id.like_button);
+		// TODO: add button click handler for liking recordings
+		likeButton.setEnabled(false);
 	}
 
 
@@ -394,14 +403,16 @@ public class RWListenActivity extends Activity {
 	private void updateUIState() {
 		if (rwBinder == null) {
 			// not connected to RWService
+			playButton.setChecked(false);
 			playButton.setEnabled(false);
 			refineButton.setEnabled(false);
 			headerLine2TextView.setText(R.string.off_line);
 		} else {
 			// connected to RWService
 			boolean isPlaying = rwBinder.isPlaying();
-			playButton.setEnabled(!isPlaying);
-			refineButton.setEnabled(true);
+			playButton.setEnabled(true);
+			playButton.setChecked(isPlaying);
+			// refineButton.setEnabled(true);
 			
 			if (isPlaying) {
 				if (rwBinder.isPlayingStaticSoundtrack()) {

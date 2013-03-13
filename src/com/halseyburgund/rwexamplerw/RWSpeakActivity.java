@@ -2,7 +2,7 @@
     ROUNDWARE
 	a participatory, location-aware media platform
 	Android client library
-   	Copyright (C) 2008-2012 Halsey Solutions, LLC
+   	Copyright (C) 2008-2013 Halsey Solutions, LLC
 	with contributions by Rob Knapen (shuffledbits.com) and Dan Latham
 	http://roundware.org | contact@roundware.org
 
@@ -21,8 +21,15 @@
 */ 		
 package com.halseyburgund.rwexamplerw;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -30,48 +37,55 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.graphics.Bitmap;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.util.Log;
 import android.view.View;
-import android.widget.AdapterView;
-import android.widget.AdapterView.OnItemSelectedListener;
-import android.widget.ArrayAdapter;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.webkit.WebSettings.RenderPriority;
 import android.widget.Button;
-import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.ToggleButton;
+import android.widget.ViewFlipper;
 
 import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWRecordingTask;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.core.RWTags;
-import com.halseyburgund.rwframework.core.RWTags.RWTag;
 import com.halseyburgund.rwframework.util.RWList;
-import com.halseyburgund.rwframework.util.RWListAdapter;
-import com.halseyburgund.rwframework.util.RWListItem;
 
-public class RWSpeakActivity extends ListActivity {
 
+public class RWSpeakActivity extends Activity {
+
+	private final static String TAG = "Speak";
+	
 	// Roundware tag type used in this activity
 	private final static String ROUNDWARE_TAGS_TYPE = "speak";
 	
 	// settings for storing recording as file
-	private final static String STORAGE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/rwexamplerw/";
+	private final static String STORAGE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/rwexamplevw/";
 
     // fields
+	private ViewFlipper viewFlipper;
+	private WebView webView;
 	private TextView headerLine2TextView;
-	private Spinner tagsSpinner;
-	private Button recordButton;
-	private Button submitButton;
-	private Button closeButton;
+	private ToggleButton recordButton;
+	private Button rerecordButton;
+	private Button uploadButton;
+	private Button cancelButton;
 	private RWService rwBinder;
 	private RWTags projectTags;
 	private RWList tagsList;
 	private RWRecordingTask recordingTask;
 	private boolean hasRecording = false;
+	private String contentFileDir;
 	
 	
 	/**
@@ -89,8 +103,23 @@ public class RWSpeakActivity extends ListActivity {
 			tagsList = new RWList(projectTags);
 			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 
+			// get the folder where the web content files are stored
+			contentFileDir = rwBinder.getContentFilesDir();
+			if ((webView != null) && (contentFileDir != null)) {
+				String contentFileName = rwBinder.getContentFilesDir() + "speak.html";
+				Log.d(TAG, "Content filename: " + contentFileName);
+				try {
+					String data = grabAsSingleString(new File(contentFileName));
+					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
+					webView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
+				} catch (FileNotFoundException e) {
+					Log.e(TAG, "No content to load, missing file: " + contentFileName);
+					// TODO: dialog?? error??
+					webView.loadUrl("file://" + contentFileName);
+				}
+			}
+			
 			updateUIState();
-			updateTagsSpinner(ROUNDWARE_TAGS_TYPE);
 		}
 
 		@Override
@@ -98,6 +127,39 @@ public class RWSpeakActivity extends ListActivity {
 			rwBinder = null;
 		}
 	};
+	
+	
+	// TODO: method duplicated in RWListenActivity and RWSpeakActivity, move to RWFramework
+	public static final String grabAsSingleString(File fileName) throws FileNotFoundException {
+        BufferedReader reader = null;
+        String returnString = null;
+        try {
+            reader = new BufferedReader(new FileReader(fileName));
+            char[] charArray = null;
+
+            if(fileName.length() > Integer.MAX_VALUE) {
+                // TODO: implement handling of large files.
+                System.out.println("The file is larger than int max = " + Integer.MAX_VALUE);
+            } else {
+                charArray = new char[(int)fileName.length()];
+                reader.read(charArray, 0, (int)fileName.length());
+                returnString = new String(charArray);
+            }
+        } catch (FileNotFoundException ex) {
+            throw ex;
+        } catch(IOException ex) {
+            ex.printStackTrace();
+        } finally {
+            try {
+            	if (reader != null) {
+            		reader.close();
+            	}
+            } catch (IOException ex) {
+                ex.printStackTrace();
+            }
+        }
+        return returnString;
+    }	
 	
 
 	/**
@@ -177,80 +239,130 @@ public class RWSpeakActivity extends ListActivity {
 	}
 
 	
-	@Override
-	protected void onListItemClick(ListView l, View v, int position, long id) {
-		// let the list decide if the item can be (de)selected
-		RWListItem q = (RWListItem) l.getItemAtPosition((int) id);
-		RWList displayedItems = ((RWListAdapter) l.getAdapter()).getDisplayedItems();
-		if (q.isOn()) {
-			displayedItems.deselect(q);
-		} else {
-			displayedItems.select(q);
-		}
-		l.invalidateViews();
-		updateUIState();
-	}
-
-	
 	/**
 	 * Sets up the primary UI widgets (spinner and buttons), and how to
 	 * handle interactions.
 	 */
+	@SuppressLint("SetJavaScriptEnabled")
 	private void initUIWidgets() {
 		headerLine2TextView = (TextView)findViewById(R.id.header_line2_textview);
 
-		tagsSpinner = (Spinner) findViewById(R.id.tags_spinner);
-		tagsSpinner.setOnItemSelectedListener(new OnItemSelectedListener() {
+		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+		
+		webView = (WebView) findViewById(R.id.tagging_webview);
+		WebSettings webSettings = webView.getSettings();
+		webSettings.setRenderPriority(RenderPriority.HIGH);
+		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setJavaScriptEnabled(true);
+		webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
+		webSettings.setSupportMultipleWindows(false);
+		webSettings.setSupportZoom(false);
+	    webSettings.setSavePassword(false);
+	    webSettings.setGeolocationEnabled(false);
+	    webSettings.setDatabaseEnabled(false);
+	    webSettings.setDomStorageEnabled(false);
+
+		webView.setWebViewClient(new WebViewClient() {
 			@Override
-			public void onItemSelected(AdapterView<?> arg0, View arg1, int arg2, long arg3) {
-				Object selection = tagsSpinner.getSelectedItem();
-				if (selection instanceof RWTag) {
-					RWTag tag = (RWTag) selection;
-					updateTagsDisplay(tag.code, tag.type);
+			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				Uri uri = Uri.parse(url);
+				if (uri.getScheme().equals("roundware")) {
+					Log.d(TAG, "Processing roundware uri: " + url);
+					String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
+					if ("//speak_cancel".equalsIgnoreCase(schemeSpecificPart)) {
+						cancel();
+					} else {
+						if (tagsList != null) {
+							boolean done = tagsList.setSelectionFromWebViewMessageUri(uri);
+							if (done) {
+								viewFlipper.showNext();
+							}
+						}
+					}
+					return true;
 				}
+				// open link in external browser
+				return super.shouldOverrideUrlLoading(view, url);
+			}
+			
+			@Override
+			public void onLoadResource(WebView view, String url) {
+				Log.d(TAG, "onLoadResource: " + url);
+				super.onLoadResource(view, url);
 			}
 
 			@Override
-			public void onNothingSelected(AdapterView<?> arg0) {
-				// void
+			public void onScaleChanged(WebView view, float oldScale, float newScale) {
+				Log.d(TAG, "onScaleChanged");
+				super.onScaleChanged(view, oldScale, newScale);
+			}
+
+			@Override
+			public void onPageFinished(WebView view, String url) {
+				Log.d(TAG, "onPageFinished");
+				super.onPageFinished(view, url);
+			}
+
+			@Override
+			public void onPageStarted(WebView view, String url, Bitmap favicon) {
+				Log.d(TAG, "onPageStarted");
+				super.onPageStarted(view, url, favicon);
+			}
+
+			@Override
+			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+				Log.e(TAG, "Page load error: " + description);
+				super.onReceivedError(view, errorCode, description, failingUrl);
 			}
 		});
 		
-		recordButton = (Button) findViewById(R.id.speak_record_button);
+		recordButton = (ToggleButton) findViewById(R.id.record_button);
 		recordButton.setOnClickListener(new View.OnClickListener() {
 	    	public void onClick(View v) {
 	    		if ((recordingTask != null) && (recordingTask.isRecording())) {
 	    		    recordingTask.stopRecording();
-	    		    recordButton.setText(R.string.record);
-	    		    submitButton.setEnabled(true);
+	    		    recordButton.setChecked(false);
+	    		    rerecordButton.setEnabled(true);
+	    		    uploadButton.setEnabled(true);
 	    		} else {
 	    			startRecording();
-	    			recordButton.setText(R.string.stop);
-	    			submitButton.setEnabled(false);
+	    			recordButton.setChecked(true);
+	    			rerecordButton.setEnabled(false);
+	    			uploadButton.setEnabled(false);
 	    		}
 	    	}
 		});
 
-		submitButton = (Button) findViewById(R.id.speak_submit_button);
-		submitButton.setOnClickListener(new View.OnClickListener() {
+		// TODO: rerecord button implementation
+		rerecordButton = (Button) findViewById(R.id.rerecord_button);
+		
+		uploadButton = (Button) findViewById(R.id.upload_button);
+		uploadButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 	    		if (recordingTask != null) {
 	    			stopRecording();
+	    			rerecordButton.setEnabled(false);
 	    			hasRecording = false;
-	    			submitButton.setEnabled(false);
+	    			uploadButton.setEnabled(false);
 	    			new SubmitTask(tagsList, recordingTask.getRecordingFileName(), 
 	    					getString(R.string.recording_submit_problem)).execute();
 	    		}
 			}
 		});
 		
-		closeButton = (Button) findViewById(R.id.speak_close_button);
-		closeButton.setOnClickListener(new View.OnClickListener() {
+		cancelButton = (Button) findViewById(R.id.cancel_button);
+		cancelButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				Intent homeIntent = new Intent(RWSpeakActivity.this, RWExampleWebViewsActivity.class);
-				RWSpeakActivity.this.startActivity(homeIntent);
+				cancel();
 			}
 		});
+	}
+	
+	
+	private void cancel() {
+		stopRecording();
+		Intent homeIntent = new Intent(RWSpeakActivity.this, RWExampleWebViewsActivity.class);
+		RWSpeakActivity.this.startActivity(homeIntent);
 	}
 	
 
@@ -262,20 +374,19 @@ public class RWSpeakActivity extends ListActivity {
 		if (rwBinder == null) {
 			// not connected to RWService
 			recordButton.setEnabled(false);
-			submitButton.setEnabled(false);
-			tagsSpinner.setEnabled(false);
-			getListView().setEnabled(false);
+			rerecordButton.setEnabled(false);
+			uploadButton.setEnabled(false);
 		} else {
 			// connected to RWService
 			if (!tagsList.hasValidSelectionsForTags()) {
 				recordButton.setEnabled(false);
-				submitButton.setEnabled(false);
+				rerecordButton.setEnabled(false);
+				uploadButton.setEnabled(false);
 			} else {
 				recordButton.setEnabled(true);
-				submitButton.setEnabled(hasRecording);
+				rerecordButton.setEnabled(hasRecording);
+				uploadButton.setEnabled(hasRecording);
 			}
-			tagsSpinner.setEnabled(true);
-			getListView().setEnabled(true);
 		}
 		
 	}
@@ -390,41 +501,6 @@ public class RWSpeakActivity extends ListActivity {
 	}
 
 
-	/**
-	 * Fills the spinner with the tags of the specified type (e.g. "listen"
-	 * or "speak").
-	 * 
-	 * @param type of tags to be displayed
-	 */
-	private void updateTagsSpinner(String type) {
-		if ((tagsSpinner != null) && (projectTags != null)) {
-			RWTags tags = projectTags.filterByType(type);
-			tags.sortByOrder();
-			ArrayAdapter<RWTag> tagsAdapter = new ArrayAdapter<RWTag>(this, android.R.layout.simple_spinner_item, tags.getTags());
-			tagsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-			tagsSpinner.setAdapter(tagsAdapter);
-		}
-	}
-
-
-	/**
-	 * Displays the options for the tag with the specified type and code in
-	 * the list of this ListActivity.
-	 * 
-	 * @param code of tag to display options of (e.g. "demo")
-	 * @param type of tag to display options of (e.g. "speak")
-	 */
-	private void updateTagsDisplay(String code, String type) {
-		if ((projectTags != null) && (tagsList != null)) {
-			setListAdapter(
-				new RWListAdapter(getBaseContext(), tagsList, 
-					projectTags.findTagByCodeAndType(code, type), 
-					R.layout.list_item)
-			);
-		}
-	}
-
-	
 	/**
 	 * Async task that calls rwSubmit for direct processing, but in the
 	 * background for Android to keep the UI responsive.
