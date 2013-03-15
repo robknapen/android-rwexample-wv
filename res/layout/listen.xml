@@ -27,9 +27,9 @@
                 android:id="@+id/home_button"
                 android:layout_width="80dip"
                 android:layout_height="wrap_content"
-                android:background="@drawable/thin_border_selector"
+                android:background="@drawable/nav_button_selector"
                 android:text="@string/home"
-                android:textColor="#FFF" />
+                android:textColor="@color/nav_button_text_selector" />
 
             <TextView
                 android:layout_width="0dip"
@@ -44,9 +44,9 @@
                 android:id="@+id/refine_button"
                 android:layout_width="80dip"
                 android:layout_height="wrap_content"
-                android:background="@drawable/thin_border_selector"
+                android:background="@drawable/nav_button_selector"
                 android:text="@string/refine"
-                android:textColor="#FFF" />
+                android:textColor="@color/nav_button_text_selector" />
 
         </LinearLayout>
 

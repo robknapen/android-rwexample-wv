@@ -8,6 +8,7 @@
 
     <!-- Header -->
     <TextView
+            android:background="@color/nav_bar_bgrd"
             android:layout_width="fill_parent"
             android:layout_height="wrap_content"
             android:layout_margin="0dp"
@@ -15,8 +16,9 @@
             android:layout_gravity="center_horizontal"
             android:gravity="center_horizontal"
             android:textAppearance="@android:style/TextAppearance.Large"
+            android:textStyle="bold"
+            android:textColor="@color/nav_bar_text"
             android:text="@string/main_activity_label"
-            android:background="#1C4F84"
             />
 
     <!-- info lines -->
@@ -57,24 +59,41 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-				android:background="@drawable/thin_border_selector"
+				android:background="@drawable/home_selector"
+	            android:textAppearance="@android:style/TextAppearance.Large"
+	            android:textStyle="bold"
                 android:text="@string/listen"
+                android:textColor="@color/home_button_text_selector"
                 />
+	    <LinearLayout
+	            android:layout_width="20dp"
+	            android:layout_height="0dp"
+	            />
         <Button
                 android:id="@+id/speak_button"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-				android:background="@drawable/thin_border_selector"
+				android:background="@drawable/home_selector"
+	            android:textAppearance="@android:style/TextAppearance.Large"
+	            android:textStyle="bold"
                 android:text="@string/speak"
+                android:textColor="@color/home_button_text_selector"
                 />
+	    <LinearLayout
+	            android:layout_width="20dp"
+	            android:layout_height="0dp"
+	            />
         <Button
                 android:id="@+id/exit_button"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-				android:background="@drawable/thin_border_selector"
+				android:background="@drawable/home_selector"
+	            android:textAppearance="@android:style/TextAppearance.Large"
+	            android:textStyle="bold"
                 android:text="@string/quit"
+                android:textColor="@color/home_button_text_selector"
                 />
     </LinearLayout>
 

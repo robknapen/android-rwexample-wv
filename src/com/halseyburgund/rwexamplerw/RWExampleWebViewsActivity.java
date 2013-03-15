@@ -2,7 +2,7 @@
     ROUNDWARE
 	a participatory, location-aware media platform
 	Android client library
-   	Copyright (C) 2008-2012 Halsey Solutions, LLC
+   	Copyright (C) 2008-2013 Halsey Solutions, LLC
 	with contributions by Rob Knapen (shuffledbits.com) and Dan Latham
 	http://roundware.org | contact@roundware.org
 
@@ -182,6 +182,8 @@ public class RWExampleWebViewsActivity extends Activity {
 		filter.addAction(RW.USER_MESSAGE);
 
 		registerReceiver(rwReceiver, filter);
+		
+		// in case resuming after user edited settings
 		updateServerForPreferences();
 
 		updateUIState(connected);
@@ -260,6 +262,12 @@ public class RWExampleWebViewsActivity extends Activity {
 			if ((serverName != null) && (serverPage != null)) {
 				rwService.putExtra(RW.EXTRA_SERVER_URL_OVERRIDE, serverName + "/" + serverPage);				
 			}
+			
+			// web content downloading customizations
+			rwService.putExtra(RW.EXTRA_WEB_CONTENT_ALWAYS_DOWNLOAD, 
+					prefs.getBoolean(RWPreferenceActivity.ALWAYS_DOWNLOAD_WEB_CONTENT, false));
+			rwService.putExtra(RW.EXTRA_WEB_CONTENT_EXTERNAL_STORAGE, 
+					prefs.getBoolean(RWPreferenceActivity.USE_EXTERNAL_STORAGE_FOR_WEB_CONTENT, false));
 			
 			// notification customizations
 			rwService.putExtra(RW.EXTRA_NOTIFICATION_TITLE, getString(R.string.notification_title));

@@ -2,7 +2,7 @@
     ROUNDWARE
 	a participatory, location-aware media platform
 	Android client library
-   	Copyright (C) 2008-2012 Halsey Solutions, LLC
+   	Copyright (C) 2008-2013 Halsey Solutions, LLC
 	with contributions by Rob Knapen (shuffledbits.com) and Dan Latham
 	http://roundware.org | contact@roundware.org
 
@@ -41,9 +41,12 @@ public class RWPreferenceActivity extends PreferenceActivity {
     public final static String MOCK_LATITUDE = "mockLocationLatitudePref";
     public final static String MOCK_LONGITUDE = "mockLocationLongitudePref";
     public final static String USE_ONLY_WIFI = "useOnlyWiFiPref";
+    public final static String ALWAYS_DOWNLOAD_WEB_CONTENT = "alwaysDownloadWebContent";
+    public final static String USE_EXTERNAL_STORAGE_FOR_WEB_CONTENT = "useExternalStorageForWebContent";
 
     
-    @Override
+    @SuppressWarnings("deprecation")
+	@Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);

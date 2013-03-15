@@ -270,12 +270,13 @@ public class RWListenActivity extends Activity {
 		
 		WebSettings webSettings = filterWebView.getSettings();
 		webSettings.setRenderPriority(RenderPriority.HIGH);
-		webSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+		webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
 		webSettings.setJavaScriptEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
 		webSettings.setSupportMultipleWindows(false);
 		webSettings.setSupportZoom(false);
 	    webSettings.setSavePassword(false);
+	    webSettings.setGeolocationDatabasePath(this.getFilesDir().getAbsolutePath());
 	    webSettings.setGeolocationEnabled(false);
 	    webSettings.setDatabaseEnabled(false);
 	    webSettings.setDomStorageEnabled(false);
@@ -283,6 +284,7 @@ public class RWListenActivity extends Activity {
 		filterWebView.setWebViewClient(new WebViewClient() {
 			@Override
 			public boolean shouldOverrideUrlLoading(WebView view, String url) {
+				Log.d(TAG, "shouldOverrideUrlLoading");
 				Uri uri = Uri.parse(url);
 				if (uri.getScheme().equals("roundware")) {
 					Log.d(TAG, "Processing roundware uri: " + url);

@@ -4,9 +4,9 @@
 	<string name="rw_spec_project_id">6</string>
 
 	<!-- some sample settings for testing -->
-    <string name="rw_spec_files_url">http://halseyburgund.com/dev/sfms/masonry/webview-dev/sfms.zip</string>
+    <string name="rw_spec_files_url"></string>
     <string name="rw_spec_files_version">0</string>
-    <string name="rw_spec_files_always_download">Y</string>
+    <string name="rw_spec_files_always_download">N</string>
 	
 	<string name="rw_spec_queue_check_interval_in_sec">10</string>
     <string name="rw_spec_heartbeat_interval_in_sec">30</string>

@@ -5,15 +5,15 @@
 		<EditTextPreference
 			android:title="Server URL"
 			android:name="URL"
-			android:defaultValue="http://rw.listenfaster.com"
-			android:summary="URL of Roundware service. Please only modify if you know what you are doing! (restart required)"
+			android:defaultValue="http://rwdev.dyndns.org"
+			android:summary="URL of Roundware service. Please only modify if you know what you are doing! (app restart required)"
 			android:key="serverNamePref"
 			/>
 		<EditTextPreference
 			android:title="Roundware Webpage"
 			android:name="Roundware"
 			android:defaultValue="/roundware/"
-			android:summary="Roundware service webpage. Please only modify if you know what you are doing! (restart required)"
+			android:summary="Roundware service webpage. Please only modify if you know what you are doing! (app restart required)"
 			android:key="serverPagePref"
 			/>
 		<CheckBoxPreference
@@ -30,6 +30,18 @@
 			android:defaultValue="false"
 			android:summary="Enable or disable detailed messages"
 			android:key="showDetailedMessagesPref"
+			/>
+		<CheckBoxPreference
+			android:title="Always Download"
+			android:defaultValue="false"
+			android:summary="Enable to always download web content if the app uses it (app restart required)"
+			android:key="alwaysDownloadWebContent"
+			/>
+		<CheckBoxPreference
+			android:title="Use External Storage"
+			android:defaultValue="false"
+			android:summary="Enable to cache web content on external storage (app restart required)"
+			android:key="useExternalStorageForWebContent"
 			/>
 		<EditTextPreference
 			android:title="Mock Latitude"
