@@ -21,8 +21,11 @@
  */
 package com.halseyburgund.rwexamplerw;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.UUID;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.AlertDialog.Builder;
@@ -39,12 +42,17 @@ import android.media.AudioManager;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebSettings.RenderPriority;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.ViewFlipper;
 
 import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
@@ -54,6 +62,8 @@ import com.halseyburgund.rwframework.util.RWList;
 
 public class RWExampleWebViewsActivity extends Activity {
 
+	private final static String TAG = "Home";
+	
 	// name of shared preferences used by all activities in the app
 	public final static String APP_SHARED_PREFS = "com.halseyburgund.rwexamplerw.preferences";
 	
@@ -73,6 +83,8 @@ public class RWExampleWebViewsActivity extends Activity {
 	private Button exitButton;
 	private TextView headerLine1TextView;
 	private TextView headerLine2TextView;
+	private ViewFlipper viewFlipper;
+	private WebView webView;
 
 	
 	/**
@@ -133,6 +145,13 @@ public class RWExampleWebViewsActivity extends Activity {
 					RWList allTags = new RWList(rwBinder.getTags());
 					allTags.saveSelectionState(getSharedPreferences(APP_SHARED_PREFS, MODE_PRIVATE));
 				}
+			} else if (RW.CONTENT_LOADED.equals(intent.getAction())) {
+				String contentFileDir = rwBinder.getContentFilesDir();
+				if ((webView != null) && (contentFileDir != null)) {
+					String contentFileName = rwBinder.getContentFilesDir() + "home.html";
+					Log.d(TAG, "Content filename: " + contentFileName);
+					webView.loadUrl("file://" + contentFileName);
+				}
 			} else if (RW.USER_MESSAGE.equals(intent.getAction())) {
 				showMessage(intent.getStringExtra(RW.EXTRA_SERVER_MESSAGE), false, false);
 			} else if (RW.ERROR_MESSAGE.equals(intent.getAction())) {
@@ -178,6 +197,7 @@ public class RWExampleWebViewsActivity extends Activity {
 		filter.addAction(RW.CONFIGURATION_LOADED);
 		filter.addAction(RW.NO_CONFIGURATION);
 		filter.addAction(RW.TAGS_LOADED);
+		filter.addAction(RW.CONTENT_LOADED);
 		filter.addAction(RW.ERROR_MESSAGE);
 		filter.addAction(RW.USER_MESSAGE);
 
@@ -306,9 +326,27 @@ public class RWExampleWebViewsActivity extends Activity {
 	 * Sets up the primary UI widgets (spinner and buttons), and how to
 	 * handle interactions.
 	 */
+	@SuppressLint("SetJavaScriptEnabled")
 	private void initUIWidgets() {
 		headerLine1TextView = (TextView) findViewById(R.id.header_line1_textview);
 		headerLine2TextView = (TextView) findViewById(R.id.header_line2_textview);
+		
+		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+		webView = (WebView) findViewById(R.id.webview);
+
+		// set-up the webview
+		WebSettings webSettings = webView.getSettings();
+		webSettings.setRenderPriority(RenderPriority.HIGH);
+		webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+		webSettings.setJavaScriptEnabled(true);
+		webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
+		webSettings.setSupportMultipleWindows(false);
+		webSettings.setSupportZoom(false);
+	    webSettings.setSavePassword(false);
+	    webSettings.setGeolocationDatabasePath(this.getFilesDir().getAbsolutePath());
+	    webSettings.setGeolocationEnabled(false);
+	    webSettings.setDatabaseEnabled(false);
+	    webSettings.setDomStorageEnabled(false);
 		
 		listenButton = (Button) findViewById(R.id.listen_button);
 		listenButton.setOnClickListener(new View.OnClickListener() {

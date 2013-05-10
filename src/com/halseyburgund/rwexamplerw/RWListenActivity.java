@@ -116,7 +116,7 @@ public class RWListenActivity extends Activity {
 				} catch (FileNotFoundException e) {
 					Log.e(TAG, "No content to load, missing file: " + contentFileName);
 					// TODO: dialog?? error??
-					filterWebView.loadUrl("file://" + contentFileName);
+					// filterWebView.loadUrl("file://" + contentFileName);
 				}
 			}
 			
