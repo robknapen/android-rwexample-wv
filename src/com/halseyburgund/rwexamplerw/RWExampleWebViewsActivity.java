@@ -336,10 +336,16 @@ public class RWExampleWebViewsActivity extends Activity {
 
 		// set-up the webview
 		WebSettings webSettings = webView.getSettings();
+
 		webSettings.setRenderPriority(RenderPriority.HIGH);
+
+        webSettings.setAppCachePath(this.getFilesDir().getAbsolutePath());
+        webSettings.setAppCacheEnabled(true);
 		webSettings.setCacheMode(WebSettings.LOAD_DEFAULT);
+
 		webSettings.setJavaScriptEnabled(true);
 		webSettings.setJavaScriptCanOpenWindowsAutomatically(false);
+
 		webSettings.setSupportMultipleWindows(false);
 		webSettings.setSupportZoom(false);
 	    webSettings.setSavePassword(false);
