@@ -123,9 +123,10 @@
                 android:id="@+id/cancel_button"
                 android:layout_width="80dip"
                 android:layout_height="wrap_content"
-                android:background="@drawable/home_normal"
+                android:background="@drawable/nav_button_selector"
                 android:text="@string/cancel"
-                android:textColor="#FFF" />
+                android:textColor="@color/nav_button_text_selector" />
+
 
         </LinearLayout>
 

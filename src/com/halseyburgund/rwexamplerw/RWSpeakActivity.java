@@ -54,7 +54,6 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 import android.widget.ViewFlipper;
 
-import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWRecordingTask;
 import com.halseyburgund.rwframework.core.RWService;
@@ -73,20 +72,20 @@ public class RWSpeakActivity extends Activity {
 	private final static String STORAGE_PATH = Environment.getExternalStorageDirectory().getAbsolutePath() + "/rwexamplevw/";
 
     // fields
-	private ViewFlipper viewFlipper;
-	private WebView webView;
-	private TextView headerLine2TextView;
-	private Button agreeButton;
-	private ToggleButton recordButton;
-	private Button rerecordButton;
-	private Button uploadButton;
-	private Button cancelButton;
-	private RWService rwBinder;
-	private RWTags projectTags;
-	private RWList tagsList;
-	private RWRecordingTask recordingTask;
-	private boolean hasRecording = false;
-	private String contentFileDir;
+	private ViewFlipper mViewFlipper;
+	private WebView mWebView;
+	private TextView mHeaderLine2TextView;
+	private Button mAgreeButton;
+	private ToggleButton mRecordButton;
+	private Button mRerecordButton;
+	private Button mUploadButton;
+	private Button mCancelButton;
+	private RWService mRwBinder;
+	private RWTags mProjectTags;
+	private RWList mTagsList;
+	private RWRecordingTask mRecordingTask;
+	private boolean mHasRecording = false;
+	private String mContentFileDir;
 	
 	
 	/**
@@ -97,29 +96,29 @@ public class RWSpeakActivity extends Activity {
 	private ServiceConnection rwConnection = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
-			rwBinder = ((RWService.RWServiceBinder) service).getService();
+			mRwBinder = ((RWService.RWServiceBinder) service).getService();
 			
 			// create a tags list for display and selection
-			projectTags = rwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
-			tagsList = new RWList(projectTags);
-			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			mProjectTags = mRwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
+			mTagsList = new RWList(mProjectTags);
+			mTagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 
 			// get the folder where the web content files are stored
-			contentFileDir = rwBinder.getContentFilesDir();
-			if ((webView != null) && (contentFileDir != null)) {
+			mContentFileDir = mRwBinder.getContentFilesDir();
+			if ((mWebView != null) && (mContentFileDir != null)) {
 // DEBUG:
-                webView.loadUrl("http://halseyburgund.com/dev/rw/webview/sfms/speak.html");
+                mWebView.loadUrl("http://halseyburgund.com/dev/rw/webview/sfms/speak.html");
 
-//				String contentFileName = rwBinder.getContentFilesDir() + "speak.html";
+//				String contentFileName = mRwBinder.getContentFilesDir() + "speak.html";
 //				Log.d(TAG, "Content filename: " + contentFileName);
 //				try {
 //					String data = grabAsSingleString(new File(contentFileName));
-//					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
-//					webView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
+//					data = data.replace("/*%roundware_tags%*/", mTagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
+//					mWebView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
 //				} catch (FileNotFoundException e) {
 //					Log.e(TAG, "No content to load, missing file: " + contentFileName);
 //					// TODO: dialog?? error??
-//					// webView.loadUrl("file://" + contentFileName);
+//					// mWebView.loadUrl("file://" + contentFileName);
 //				}
 			}
 			
@@ -128,7 +127,7 @@ public class RWSpeakActivity extends Activity {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			rwBinder = null;
+			mRwBinder = null;
 		}
 	};
 	
@@ -211,8 +210,8 @@ public class RWSpeakActivity extends Activity {
 	protected void onPause() {
 		super.onPause();
 		unregisterReceiver(rwReceiver);
-		if (tagsList != null) {
-			tagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+		if (mTagsList != null) {
+			mTagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 		}
 	}
 
@@ -249,20 +248,21 @@ public class RWSpeakActivity extends Activity {
 	 */
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initUIWidgets() {
-		headerLine2TextView = (TextView)findViewById(R.id.header_line2_textview);
+		mHeaderLine2TextView = (TextView)findViewById(R.id.header_line2_textview);
 
-		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+		mViewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
 
-		agreeButton = (Button) findViewById(R.id.agree_button);
-		agreeButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				viewFlipper.showNext();
-			}
-		});
+		mAgreeButton = (Button) findViewById(R.id.agree_button);
+		mAgreeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mViewFlipper.showNext();
+                updateUIState();
+            }
+        });
 		
-		webView = (WebView) findViewById(R.id.tagging_webview);
-		WebSettings webSettings = webView.getSettings();
+		mWebView = (WebView) findViewById(R.id.tagging_webview);
+		WebSettings webSettings = mWebView.getSettings();
 		webSettings.setRenderPriority(RenderPriority.HIGH);
 
         webSettings.setAppCachePath(this.getFilesDir().getAbsolutePath());
@@ -278,106 +278,107 @@ public class RWSpeakActivity extends Activity {
 	    webSettings.setDatabaseEnabled(false);
 	    webSettings.setDomStorageEnabled(false);
 
-		webView.setWebViewClient(new WebViewClient() {
-			@Override
-			public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				Uri uri = Uri.parse(url);
-				if (uri.getScheme().equals("roundware")) {
-					Log.d(TAG, "Processing roundware uri: " + url);
-					String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
-					if ("//speak_cancel".equalsIgnoreCase(schemeSpecificPart)) {
-						cancel();
-					} else {
-						if (tagsList != null) {
-							boolean done = tagsList.setSelectionFromWebViewMessageUri(uri);
-							if (done) {
-								viewFlipper.showNext();
-							}
-						}
-					}
-					return true;
-				}
-				// open link in external browser
-				return super.shouldOverrideUrlLoading(view, url);
-			}
-			
-			@Override
-			public void onLoadResource(WebView view, String url) {
-				Log.d(TAG, "onLoadResource: " + url);
-				super.onLoadResource(view, url);
-			}
+		mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Uri uri = Uri.parse(url);
+                if (uri.getScheme().equals("roundware")) {
+                    Log.d(TAG, "Processing roundware uri: " + url);
+                    String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
+                    if ("//speak_cancel".equalsIgnoreCase(schemeSpecificPart)) {
+                        cancel();
+                    } else {
+                        if (mTagsList != null) {
+                            boolean done = mTagsList.setSelectionFromWebViewMessageUri(uri);
+                            if (done) {
+                                mViewFlipper.showNext();
+                                updateUIState();
+                            }
+                        }
+                    }
+                    return true;
+                }
+                // open link in external browser
+                return super.shouldOverrideUrlLoading(view, url);
+            }
 
-			@Override
-			public void onScaleChanged(WebView view, float oldScale, float newScale) {
-				Log.d(TAG, "onScaleChanged");
-				super.onScaleChanged(view, oldScale, newScale);
-			}
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                Log.d(TAG, "onLoadResource: " + url);
+                super.onLoadResource(view, url);
+            }
 
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				Log.d(TAG, "onPageFinished");
-				if (agreeButton != null) {
-					agreeButton.setEnabled(true);
-				}
-				super.onPageFinished(view, url);
-			}
+            @Override
+            public void onScaleChanged(WebView view, float oldScale, float newScale) {
+                Log.d(TAG, "onScaleChanged");
+                super.onScaleChanged(view, oldScale, newScale);
+            }
 
-			@Override
-			public void onPageStarted(WebView view, String url, Bitmap favicon) {
-				Log.d(TAG, "onPageStarted");
-				if (agreeButton != null) {
-					agreeButton.setEnabled(false);
-				}
-				super.onPageStarted(view, url, favicon);
-			}
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.d(TAG, "onPageFinished");
+                if (mAgreeButton != null) {
+                    mAgreeButton.setEnabled(true);
+                }
+                super.onPageFinished(view, url);
+            }
 
-			@Override
-			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-				Log.e(TAG, "Page load error: " + description);
-				super.onReceivedError(view, errorCode, description, failingUrl);
-			}
-		});
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d(TAG, "onPageStarted");
+                if (mAgreeButton != null) {
+                    mAgreeButton.setEnabled(false);
+                }
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.e(TAG, "Page load error: " + description);
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+        });
 		
-		recordButton = (ToggleButton) findViewById(R.id.record_button);
-		recordButton.setOnClickListener(new View.OnClickListener() {
-	    	public void onClick(View v) {
-	    		if ((recordingTask != null) && (recordingTask.isRecording())) {
-	    		    recordingTask.stopRecording();
-	    		    recordButton.setChecked(false);
-	    		    rerecordButton.setEnabled(true);
-	    		    uploadButton.setEnabled(true);
-	    		} else {
-	    			startRecording();
-	    			recordButton.setChecked(true);
-	    			rerecordButton.setEnabled(false);
-	    			uploadButton.setEnabled(false);
-	    		}
-	    	}
-		});
+		mRecordButton = (ToggleButton) findViewById(R.id.record_button);
+		mRecordButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if ((mRecordingTask != null) && (mRecordingTask.isRecording())) {
+                    mRecordingTask.stopRecording();
+                    mRecordButton.setChecked(false);
+                    mRerecordButton.setEnabled(true);
+                    mUploadButton.setEnabled(true);
+                } else {
+                    startRecording();
+                    mRecordButton.setChecked(true);
+                    mRerecordButton.setEnabled(false);
+                    mUploadButton.setEnabled(false);
+                }
+            }
+        });
 
 		// TODO: rerecord button implementation
-		rerecordButton = (Button) findViewById(R.id.rerecord_button);
+		mRerecordButton = (Button) findViewById(R.id.rerecord_button);
 		
-		uploadButton = (Button) findViewById(R.id.upload_button);
-		uploadButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-	    		if (recordingTask != null) {
-	    			stopRecording();
-	    			rerecordButton.setEnabled(false);
-	    			hasRecording = false;
-	    			uploadButton.setEnabled(false);
-	    			new SubmitTask(tagsList, recordingTask.getRecordingFileName(), 
-	    					getString(R.string.recording_submit_problem)).execute();
-	    		}
-			}
-		});
+		mUploadButton = (Button) findViewById(R.id.upload_button);
+		mUploadButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (mRecordingTask != null) {
+                    stopRecording();
+                    mRerecordButton.setEnabled(false);
+                    mHasRecording = false;
+                    mUploadButton.setEnabled(false);
+                    new SubmitTask(mTagsList, mRecordingTask.getRecordingFileName(),
+                            getString(R.string.recording_submit_problem)).execute();
+                }
+            }
+        });
 		
-		cancelButton = (Button) findViewById(R.id.cancel_button);
-		cancelButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				cancel();
-			}
-		});
+		mCancelButton = (Button) findViewById(R.id.cancel_button);
+		mCancelButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                cancel();
+            }
+        });
 	}
 	
 	
@@ -393,27 +394,27 @@ public class RWSpeakActivity extends Activity {
 	 * connection state and other state variables.
 	 */
 	private void updateUIState() {
-		if (rwBinder == null) {
+		if (mRwBinder == null) {
 			// not connected to RWService
-			recordButton.setEnabled(false);
-			rerecordButton.setEnabled(false);
-			uploadButton.setEnabled(false);
+			mRecordButton.setEnabled(false);
+			mRerecordButton.setEnabled(false);
+			mUploadButton.setEnabled(false);
 		} else {
 			// update legal agreement text
 			TextView tx = (TextView) findViewById(R.id.legal_agreement_textview);
 			if (tx != null) {
-				tx.setText(rwBinder.getConfiguration().getLegalAgreement());
+				tx.setText(mRwBinder.getConfiguration().getLegalAgreement());
 			}
 			
 			// connected to RWService
-			if (!tagsList.hasValidSelectionsForTags()) {
-				recordButton.setEnabled(false);
-				rerecordButton.setEnabled(false);
-				uploadButton.setEnabled(false);
+			if (!mTagsList.hasValidSelectionsForTags()) {
+				mRecordButton.setEnabled(false);
+				mRerecordButton.setEnabled(false);
+				mUploadButton.setEnabled(false);
 			} else {
-				recordButton.setEnabled(true);
-				rerecordButton.setEnabled(hasRecording);
-				uploadButton.setEnabled(hasRecording);
+				mRecordButton.setEnabled(true);
+				mRerecordButton.setEnabled(mHasRecording);
+				mUploadButton.setEnabled(mHasRecording);
 			}
 		}
 		
@@ -427,46 +428,46 @@ public class RWSpeakActivity extends Activity {
 	 * UI thread (the callbacks will be made from a background thread).
 	 */
 	private void startRecording() {
-		recordingTask = new RWRecordingTask(rwBinder, STORAGE_PATH, new RWRecordingTask.StateListener() {
-        	private int maxTimeSec = rwBinder.getConfiguration().getMaxRecordingTimeSec();
+		mRecordingTask = new RWRecordingTask(mRwBinder, STORAGE_PATH, new RWRecordingTask.StateListener() {
+        	private int maxTimeSec = mRwBinder.getConfiguration().getMaxRecordingTimeSec();
         	private long startTimeStampMillis;
         	
         	public void recording(long timeStampMillis, short [] samples) {
         		int elapsedTimeSec = (int)Math.round((timeStampMillis - startTimeStampMillis) / 1000.0);
         		final int min = elapsedTimeSec / 60;
         		final int sec = elapsedTimeSec - (min * 60);
-        		headerLine2TextView.post(new Runnable() {
-        			public void run() {
-                		headerLine2TextView.setText(String.format("%1d:%02d", min, sec));
-        			}
-        		});
+        		mHeaderLine2TextView.post(new Runnable() {
+                    public void run() {
+                        mHeaderLine2TextView.setText(String.format("%1d:%02d", min, sec));
+                    }
+                });
         		if (elapsedTimeSec > maxTimeSec) {
-        			recordingTask.stopRecording();
+        			mRecordingTask.stopRecording();
         		}
         	}
         	
         	public void recordingStarted(long timeStampMillis) {
-        		if (rwBinder != null) {
-        			maxTimeSec = rwBinder.getConfiguration().getMaxRecordingTimeSec();
+        		if (mRwBinder != null) {
+        			maxTimeSec = mRwBinder.getConfiguration().getMaxRecordingTimeSec();
         		}
         		startTimeStampMillis = timeStampMillis;
-        		headerLine2TextView.post(new Runnable() {
-        			public void run() {
-                		headerLine2TextView.setText(R.string.recording_started);
-        			}
-        		});
+        		mHeaderLine2TextView.post(new Runnable() {
+                    public void run() {
+                        mHeaderLine2TextView.setText(R.string.recording_started);
+                    }
+                });
         	}
         	
         	public void recordingStopped(long timeStampMillis) {
-        		headerLine2TextView.post(new Runnable() {
-        			public void run() {
-                		headerLine2TextView.setText(R.string.recording_stopped);
-        			}
-        		});
+        		mHeaderLine2TextView.post(new Runnable() {
+                    public void run() {
+                        mHeaderLine2TextView.setText(R.string.recording_stopped);
+                    }
+                });
         	}
         });
 		
-		recordingTask.execute();
+		mRecordingTask.execute();
     }
 		
 	
@@ -474,9 +475,9 @@ public class RWSpeakActivity extends Activity {
 	 * Stops the recording task if it is running.
 	 */
 	private void stopRecording() {
-		if ((recordingTask != null) && (recordingTask.isRecording())) {
-			recordingTask.stopRecording();
-			hasRecording = true;
+		if ((mRecordingTask != null) && (mRecordingTask.isRecording())) {
+			mRecordingTask.stopRecording();
+			mHasRecording = true;
 			updateUIState();
 		}
 	}
@@ -550,7 +551,7 @@ public class RWSpeakActivity extends Activity {
 		@Override
 		protected String doInBackground(Void... params) {
 			try {
-				rwBinder.rwSubmit(selections, filename, null, true, true);
+				mRwBinder.rwSubmit(selections, filename, null, true, true);
 				return null;
 			} catch (Exception e) {
 				return errorMessage;

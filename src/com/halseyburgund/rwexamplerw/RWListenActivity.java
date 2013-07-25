@@ -315,6 +315,7 @@ public class RWListenActivity extends Activity {
                             }
                         }
                         mViewFlipper.showPrevious();
+                        updateUIState();
                     } else {
                         if (mTagsList != null) {
                             mTagsList.setSelectionFromWebViewMessageUri(uri);
