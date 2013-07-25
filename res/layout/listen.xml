@@ -99,7 +99,7 @@
                     android:layout_gravity="center_horizontal"
                     android:layout_marginTop="5dp"
                     android:gravity="center_horizontal"
-                    android:text=""
+                    android:text="Unknow Asset"
                     android:textAppearance="@android:style/TextAppearance.Small.Inverse" />
             </LinearLayout>
         </LinearLayout>

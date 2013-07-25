@@ -12,4 +12,8 @@
     <string name="rw_spec_heartbeat_interval_in_sec">30</string>
 	<string name="rw_spec_min_location_update_time_msec">60000</string>
 	<string name="rw_spec_min_location_update_distance_meters">3</string>
+
+    <string name="rw_spec_stream_metadata_enabled_yn">Y</string>
+    <string name="rw_spec_stream_metadata_timer_interval_in_msec">1000</string>
+
 </resources>

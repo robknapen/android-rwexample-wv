@@ -107,17 +107,20 @@ public class RWSpeakActivity extends Activity {
 			// get the folder where the web content files are stored
 			contentFileDir = rwBinder.getContentFilesDir();
 			if ((webView != null) && (contentFileDir != null)) {
-				String contentFileName = rwBinder.getContentFilesDir() + "speak.html";
-				Log.d(TAG, "Content filename: " + contentFileName);
-				try {
-					String data = grabAsSingleString(new File(contentFileName));
-					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
-					webView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
-				} catch (FileNotFoundException e) {
-					Log.e(TAG, "No content to load, missing file: " + contentFileName);
-					// TODO: dialog?? error??
-					// webView.loadUrl("file://" + contentFileName);
-				}
+// DEBUG:
+                webView.loadUrl("http://halseyburgund.com/dev/rw/webview/sfms/speak.html");
+
+//				String contentFileName = rwBinder.getContentFilesDir() + "speak.html";
+//				Log.d(TAG, "Content filename: " + contentFileName);
+//				try {
+//					String data = grabAsSingleString(new File(contentFileName));
+//					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
+//					webView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
+//				} catch (FileNotFoundException e) {
+//					Log.e(TAG, "No content to load, missing file: " + contentFileName);
+//					// TODO: dialog?? error??
+//					// webView.loadUrl("file://" + contentFileName);
+//				}
 			}
 			
 			updateUIState();

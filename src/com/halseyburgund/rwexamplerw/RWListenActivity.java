@@ -54,7 +54,6 @@ import android.widget.TextView;
 import android.widget.ToggleButton;
 import android.widget.ViewFlipper;
 
-import com.halseyburgund.rwexamplerw.R;
 import com.halseyburgund.rwframework.core.RW;
 import com.halseyburgund.rwframework.core.RWService;
 import com.halseyburgund.rwframework.core.RWTags;
@@ -67,23 +66,29 @@ public class RWListenActivity extends Activity {
 	
 	// Roundware tag type used in this activity
 	private final static String ROUNDWARE_TAGS_TYPE = "listen";
-	
-	// fields
-	private ProgressDialog progressDialog;
-	private ViewFlipper viewFlipper;
-	private TextView headerLine2TextView;
-	private TextView headerLine3TextView;
-	private WebView filterWebView;
-	private ToggleButton playButton;
-	private Button homeButton;
-	private Button refineButton;
-	private ToggleButton likeButton;
-	private ToggleButton flagButton;
-	private int volumeLevel = 80;
-	private RWService rwBinder;
-	private RWTags projectTags;
-	private RWList tagsList;
-	private String contentFileDir;
+
+    // Roundware voting types used in this activity
+    private final static String AS_VOTE_TYPE_FLAG = "flag";
+    private final static String AS_VOTE_TYPE_LIKE = "like";
+
+    // fields
+	private ProgressDialog mProgressDialog;
+	private ViewFlipper mViewFlipper;
+	private TextView mHeaderLine2TextView;
+	private TextView mHeaderLine3TextView;
+	private WebView mWebView;
+	private ToggleButton mPlayButton;
+	private Button mHomeButton;
+	private Button mRefineButton;
+	private ToggleButton mLikeButton;
+	private ToggleButton mFlagButton;
+	private int mVolumeLevel = 80;
+	private RWService mRwBinder;
+	private RWTags mProjectTags;
+	private RWList mTagsList;
+	private String mContentFileDir;
+    private int mCurrentAssetId;
+    private int mPreviousAssetId;
 
 	
 	/**
@@ -95,29 +100,32 @@ public class RWListenActivity extends Activity {
 		@SuppressLint("SetJavaScriptEnabled")
 		@Override
 		public void onServiceConnected(ComponentName className, IBinder service) {
-			rwBinder = ((RWService.RWServiceBinder) service).getService();
-			rwBinder.playbackFadeIn(volumeLevel);
-			rwBinder.setVolumeLevel(volumeLevel, false);
+			mRwBinder = ((RWService.RWServiceBinder) service).getService();
+			mRwBinder.playbackFadeIn(mVolumeLevel);
+			mRwBinder.setVolumeLevel(mVolumeLevel, false);
 			
 			// create a tags list for display and selection
-			projectTags = rwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
-			tagsList = new RWList(projectTags);
-			tagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+			mProjectTags = mRwBinder.getTags().filterByType(ROUNDWARE_TAGS_TYPE);
+			mTagsList = new RWList(mProjectTags);
+			mTagsList.restoreSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 
 			// get the folder where the web content files are stored
-			contentFileDir = rwBinder.getContentFilesDir();
-			if ((filterWebView != null) && (contentFileDir != null)) {
-				String contentFileName = rwBinder.getContentFilesDir() + "listen.html";
-				Log.d(TAG, "Content filename: " + contentFileName);
-				try {
-					String data = grabAsSingleString(new File(contentFileName));
-					data = data.replace("/*%roundware_tags%*/", tagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
-					filterWebView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
-				} catch (FileNotFoundException e) {
-					Log.e(TAG, "No content to load, missing file: " + contentFileName);
-					// TODO: dialog?? error??
-					// filterWebView.loadUrl("file://" + contentFileName);
-				}
+			mContentFileDir = mRwBinder.getContentFilesDir();
+			if ((mWebView != null) && (mContentFileDir != null)) {
+// DEBUG:
+                mWebView.loadUrl("http://halseyburgund.com/dev/rw/webview/sfms/listen.html");
+
+//				String contentFileName = mRwBinder.getContentFilesDir() + "listen.html";
+//				Log.d(TAG, "Content filename: " + contentFileName);
+//				try {
+//					String data = grabAsSingleString(new File(contentFileName));
+//					data = data.replace("/*%roundware_tags%*/", mTagsList.toJsonForWebView(ROUNDWARE_TAGS_TYPE));
+//					mWebView.loadDataWithBaseURL("file://" + contentFileName, data, null, null, null);
+//				} catch (FileNotFoundException e) {
+//					Log.e(TAG, "No content to load, missing file: " + contentFileName);
+//					// TODO: dialog?? error??
+//					// mWebView.loadUrl("file://" + contentFileName);
+//				}
 			}
 			
 			updateUIState();
@@ -125,7 +133,7 @@ public class RWListenActivity extends Activity {
 
 		@Override
 		public void onServiceDisconnected(ComponentName name) {
-			rwBinder = null;
+			mRwBinder = null;
 		}
 	};
 	
@@ -180,14 +188,20 @@ public class RWListenActivity extends Activity {
 			updateUIState();
 			if (RW.READY_TO_PLAY.equals(intent.getAction())) {
 				// remove progress dialog when needed
-				if (progressDialog != null) {
-					progressDialog.dismiss();
+				if (mProgressDialog != null) {
+					mProgressDialog.dismiss();
 				}
-			} else if (RW.STREAM_METADATA_UPDATED.equals(intent.getAction())) {
-				String title = intent.getStringExtra(RW.EXTRA_STREAM_METADATA_TITLE);
-				if (headerLine3TextView != null) {
-					headerLine3TextView.setText(title);
-				}
+            } else if (RW.STREAM_METADATA_UPDATED.equals(intent.getAction())) {
+                // new recording started playing - update title display
+                int previousAssetId = intent.getIntExtra(RW.EXTRA_STREAM_METADATA_PREVIOUS_ASSET_ID, -1);
+                int currentAssetId = intent.getIntExtra(RW.EXTRA_STREAM_METADATA_CURRENT_ASSET_ID, -1);
+                String title = intent.getStringExtra(RW.EXTRA_STREAM_METADATA_TITLE);
+                handleRecordingChange(previousAssetId, currentAssetId, title);
+                // remove progress dialog when needed
+                if (mProgressDialog != null) {
+                    mProgressDialog.dismiss();
+                    mProgressDialog = null;
+                }
 			} else if (RW.USER_MESSAGE.equals(intent.getAction())) {
 				showMessage(intent.getStringExtra(RW.EXTRA_SERVER_MESSAGE), false, false);
 			} else if (RW.ERROR_MESSAGE.equals(intent.getAction())) {
@@ -223,8 +237,8 @@ public class RWListenActivity extends Activity {
 	protected void onPause() {
 		super.onPause();
 		unregisterReceiver(rwReceiver);
-		if (tagsList != null) {
-			tagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
+		if (mTagsList != null) {
+			mTagsList.saveSelectionState(getSharedPreferences(RWExampleWebViewsActivity.APP_SHARED_PREFS, MODE_PRIVATE));
 		}
 	}
 
@@ -244,7 +258,7 @@ public class RWListenActivity extends Activity {
 		filter.addAction(RW.STREAM_METADATA_UPDATED);
 		registerReceiver(rwReceiver, filter);
 
-		updateUIState();
+        startPlayback();
 	}
 
 
@@ -263,12 +277,12 @@ public class RWListenActivity extends Activity {
 	 */
 	@SuppressLint("SetJavaScriptEnabled")
 	private void initUIWidgets() {
-		headerLine2TextView = (TextView) findViewById(R.id.header_line2_textview);
-		headerLine3TextView = (TextView) findViewById(R.id.header_line3_textview);
+		mHeaderLine2TextView = (TextView) findViewById(R.id.header_line2_textview);
+		mHeaderLine3TextView = (TextView) findViewById(R.id.header_line3_textview);
 		
-		filterWebView = (WebView) findViewById(R.id.filter_webview);
+		mWebView = (WebView) findViewById(R.id.filter_webview);
 		
-		WebSettings webSettings = filterWebView.getSettings();
+		WebSettings webSettings = mWebView.getSettings();
 		webSettings.setRenderPriority(RenderPriority.HIGH);
 
         webSettings.setAppCachePath(this.getFilesDir().getAbsolutePath());
@@ -285,149 +299,207 @@ public class RWListenActivity extends Activity {
 	    webSettings.setDatabaseEnabled(false);
 	    webSettings.setDomStorageEnabled(false);
 
-		filterWebView.setWebViewClient(new WebViewClient() {
-			@Override
-			public boolean shouldOverrideUrlLoading(WebView view, String url) {
-				Log.d(TAG, "shouldOverrideUrlLoading");
-				Uri uri = Uri.parse(url);
-				if (uri.getScheme().equals("roundware")) {
-					Log.d(TAG, "Processing roundware uri: " + url);
-					String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
-					if ("//listen_done".equalsIgnoreCase(schemeSpecificPart)) {
-						// request update of audio stream directly when needed
-						if ((rwBinder != null) && (tagsList.hasValidSelectionsForTags())) {
-							if (rwBinder.isPlaying()) {
-								new ModifyStreamTask(tagsList, getString(R.string.modify_stream_problem)).execute();
-							}
-						}
-						viewFlipper.showPrevious();
-					} else {
-						if (tagsList != null) {
-							tagsList.setSelectionFromWebViewMessageUri(uri);
-						}
-					}
-					return true;
-				}
-				// open link in external browser
-				return super.shouldOverrideUrlLoading(view, url);
-			}
-			
-			@Override
-			public void onLoadResource(WebView view, String url) {
-				Log.d(TAG, "onLoadResource: " + url);
-				super.onLoadResource(view, url);
-			}
+		mWebView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d(TAG, "shouldOverrideUrlLoading");
+                Uri uri = Uri.parse(url);
+                if (uri.getScheme().equals("roundware")) {
+                    Log.d(TAG, "Processing roundware uri: " + url);
+                    String schemeSpecificPart = uri.getSchemeSpecificPart(); // everything from : to #
+                    if ("//listen_done".equalsIgnoreCase(schemeSpecificPart)) {
+                        // request update of audio stream directly when needed
+                        if ((mRwBinder != null) && (mTagsList.hasValidSelectionsForTags())) {
+                            if (mRwBinder.isPlaying()) {
+                                new ModifyStreamTask(mTagsList, getString(R.string.modify_stream_problem)).execute();
+                            }
+                        }
+                        mViewFlipper.showPrevious();
+                    } else {
+                        if (mTagsList != null) {
+                            mTagsList.setSelectionFromWebViewMessageUri(uri);
+                        }
+                    }
+                    return true;
+                }
+                // open link in external browser
+                return super.shouldOverrideUrlLoading(view, url);
+            }
 
-			@Override
-			public void onScaleChanged(WebView view, float oldScale, float newScale) {
-				Log.d(TAG, "onScaleChanged");
-				super.onScaleChanged(view, oldScale, newScale);
-			}
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                Log.d(TAG, "onLoadResource: " + url);
+                super.onLoadResource(view, url);
+            }
 
-			@Override
-			public void onPageFinished(WebView view, String url) {
-				Log.d(TAG, "onPageFinished");
-				if (refineButton != null) {
-					refineButton.setEnabled(true);
-				}
-				super.onPageFinished(view, url);
-			}
+            @Override
+            public void onScaleChanged(WebView view, float oldScale, float newScale) {
+                Log.d(TAG, "onScaleChanged");
+                super.onScaleChanged(view, oldScale, newScale);
+            }
 
-			@Override
-			public void onPageStarted(WebView view, String url, Bitmap favicon) {
-				Log.d(TAG, "onPageStarted");
-				if (refineButton != null) {
-					refineButton.setEnabled(false);
-				}
-				super.onPageStarted(view, url, favicon);
-			}
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.d(TAG, "onPageFinished");
+                if (mRefineButton != null) {
+                    mRefineButton.setEnabled(true);
+                }
+                super.onPageFinished(view, url);
+            }
 
-			@Override
-			public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-				Log.e(TAG, "Page load error: " + description);
-				if (refineButton != null) {
-					refineButton.setEnabled(false);
-				}
-				super.onReceivedError(view, errorCode, description, failingUrl);
-			}
-		});
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d(TAG, "onPageStarted");
+                if (mRefineButton != null) {
+                    mRefineButton.setEnabled(false);
+                }
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.e(TAG, "Page load error: " + description);
+                if (mRefineButton != null) {
+                    mRefineButton.setEnabled(false);
+                }
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+        });
 		
-		viewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
+		mViewFlipper = (ViewFlipper) findViewById(R.id.viewFlipper);
 
-		homeButton = (Button) findViewById(R.id.home_button);
-		homeButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				rwBinder.playbackStop();
-				Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
-				RWListenActivity.this.startActivity(homeIntent);
-			}
-		});
+		mHomeButton = (Button) findViewById(R.id.home_button);
+		mHomeButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                mRwBinder.playbackStop();
+                Intent homeIntent = new Intent(RWListenActivity.this, RWExampleWebViewsActivity.class);
+                RWListenActivity.this.startActivity(homeIntent);
+            }
+        });
 		
-		refineButton = (Button) findViewById(R.id.refine_button);
-		refineButton.setOnClickListener(new View.OnClickListener() {
-			@Override
-			public void onClick(View v) {
-				if (viewFlipper != null) {
-					viewFlipper.showNext();
-				}
-			}
-		});
+		mRefineButton = (Button) findViewById(R.id.refine_button);
+		mRefineButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mViewFlipper != null) {
+                    mViewFlipper.showNext();
+                }
+            }
+        });
 
-		playButton = (ToggleButton) findViewById(R.id.play_button);
-		playButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				if (!rwBinder.isPlaying()) {
-					if (!rwBinder.isPlayingMuted()) {
-						showProgress(getString(R.string.starting_playback_title), getString(R.string.starting_playback_message), true, true);
-						rwBinder.playbackStart(null);
-					}
-					rwBinder.playbackFadeIn(volumeLevel);
-					// playButton.setChecked(true);
-				} else {
-					volumeLevel = rwBinder.getVolumeLevel();
-					rwBinder.playbackFadeOut();
-					// playButton.setChecked(false);
-				}
-				updateUIState();
-			}
-		});
+		mPlayButton = (ToggleButton) findViewById(R.id.play_button);
+		mPlayButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (!mRwBinder.isPlaying()) {
+                    startPlayback();
+                } else {
+                    stopPlayback();
+                }
+                updateUIState();
+            }
+        });
 
-		flagButton = (ToggleButton) findViewById(R.id.flag_button);
-		// TODO: add button click handler for flagging recordings
-		flagButton.setEnabled(false);
+		mFlagButton = (ToggleButton) findViewById(R.id.flag_button);
+		mFlagButton.setEnabled(false);
 		
-		likeButton = (ToggleButton) findViewById(R.id.like_button);
-		// TODO: add button click handler for liking recordings
-		likeButton.setEnabled(false);
+		mLikeButton = (ToggleButton) findViewById(R.id.like_button);
+		mLikeButton.setEnabled(false);
 	}
 
 
-	/**
+    private void startPlayback() {
+        if (mRwBinder != null) {
+            if (!mRwBinder.isPlaying()) {
+                if (!mRwBinder.isPlayingMuted()) {
+                    showProgress(getString(R.string.starting_playback_title), getString(R.string.starting_playback_message), true, true);
+                    mCurrentAssetId = -1;
+                    mPreviousAssetId = -1;
+                    mRwBinder.playbackStart(mTagsList);
+                }
+                mRwBinder.playbackFadeIn(mVolumeLevel);
+            }
+        }
+        updateUIState();
+    }
+
+
+    private void stopPlayback() {
+        sendVotingState(mCurrentAssetId);
+        mVolumeLevel = mRwBinder.getVolumeLevel();
+        mRwBinder.playbackFadeOut();
+        mCurrentAssetId = -1;
+        mPreviousAssetId = -1;
+        updateUIState();
+    }
+
+
+    private void handleRecordingChange(int previousAssetId, int currentAssetId, String newTitle) {
+        Log.d(TAG, String.format("Recording changed, new asset ID: %d, new title: %s", currentAssetId, newTitle));
+
+        mCurrentAssetId = currentAssetId;
+        mPreviousAssetId = previousAssetId;
+
+        // send asset voting if needed
+        sendVotingState(mPreviousAssetId);
+
+        // show info about new recording
+        if ((mHeaderLine3TextView != null) && (mRwBinder != null)) {
+            mHeaderLine3TextView.setText(newTitle);
+        }
+
+        // reset vote buttons
+        if (mLikeButton != null) {
+            mLikeButton.setEnabled(true);
+            mLikeButton.setChecked(false);
+        }
+        if (mFlagButton != null) {
+            mFlagButton.setEnabled(true);
+            mFlagButton.setChecked(false);
+        }
+    }
+
+
+    private void sendVotingState(int assetId) {
+        if (assetId != -1) {
+            if (mFlagButton.isChecked()) {
+                new VoteAssetTask(assetId, AS_VOTE_TYPE_FLAG, null, getString(R.string.vote_asset_problem)).execute();
+            }
+            if (mLikeButton.isChecked()) {
+                new VoteAssetTask(assetId, AS_VOTE_TYPE_LIKE, null, getString(R.string.vote_asset_problem)).execute();
+            }
+        }
+    }
+
+
+    /**
 	 * Updates the state of the primary UI widgets based on current
 	 * connection state and other state variables.
 	 */
 	private void updateUIState() {
-		if (rwBinder == null) {
+		if (mRwBinder == null) {
 			// not connected to RWService
-			playButton.setChecked(false);
-			playButton.setEnabled(false);
-			refineButton.setEnabled(false);
-			headerLine2TextView.setText(R.string.off_line);
+			mPlayButton.setChecked(false);
+			mPlayButton.setEnabled(false);
+            mLikeButton.setChecked(false);
+            mLikeButton.setEnabled(false);
+            mFlagButton.setChecked(false);
+            mFlagButton.setEnabled(false);
+            mRefineButton.setEnabled(false);
+			mHeaderLine2TextView.setText(R.string.off_line);
 		} else {
 			// connected to RWService
-			boolean isPlaying = rwBinder.isPlaying();
-			playButton.setEnabled(true);
-			playButton.setChecked(isPlaying);
-			// refineButton.setEnabled(true);
-			
+			boolean isPlaying = mRwBinder.isPlaying();
+			mPlayButton.setEnabled(true);
+			mPlayButton.setChecked(isPlaying);
+
 			if (isPlaying) {
-				if (rwBinder.isPlayingStaticSoundtrack()) {
-					headerLine2TextView.setText(R.string.playing_static_soundtrack_msg);		
+				if (mRwBinder.isPlayingStaticSoundtrack()) {
+					mHeaderLine2TextView.setText(R.string.playing_static_soundtrack_msg);
 				} else {
-					headerLine2TextView.setText(R.string.playing);
+					mHeaderLine2TextView.setText(R.string.playing);
 				}
 			} else {
-				headerLine2TextView.setText(R.string.paused);
+				mHeaderLine2TextView.setText(R.string.paused);
 			}
 		}
 	}
@@ -454,8 +526,8 @@ public class RWListenActivity extends Activity {
 	 * @param isCancelable setting for the progress dialog
 	 */
 	private void showProgress(String title, String message, boolean isIndeterminate, boolean isCancelable) {
-		if (progressDialog == null) {
-			progressDialog = Utils.showProgressDialog(this, title, message, isIndeterminate, isCancelable);
+		if (mProgressDialog == null) {
+			mProgressDialog = Utils.showProgressDialog(this, title, message, isIndeterminate, isCancelable);
 		}
 	}
 	
@@ -479,7 +551,7 @@ public class RWListenActivity extends Activity {
 		@Override
 		protected String doInBackground(Void... params) {
 			try {
-				rwBinder.rwModifyStream(selections, true);
+				mRwBinder.rwModifyStream(selections, true);
 				return null;
 			} catch (Exception e) {
 				return errorMessage;
@@ -494,5 +566,45 @@ public class RWListenActivity extends Activity {
 			}
 		}
 	}
-	
+
+
+    /**
+     * Async task that calls rwSendVoteAsset for direct processing, but in
+     * the background for Android to keep the UI responsive.
+     *
+     * @author Rob Knapen
+     */
+    private class VoteAssetTask extends AsyncTask<Void, Void, String> {
+
+        private int mAssetId;
+        private String mVoteType;
+        private String mVoteValue;
+        private String mErrorMessage;
+
+        public VoteAssetTask(int assetId, String voteType, String voteValue, String errorMessage) {
+            mAssetId = assetId;
+            mVoteType = voteType;
+            mVoteValue = voteValue;
+            mErrorMessage = errorMessage;
+        }
+
+        @Override
+        protected String doInBackground(Void... params) {
+            try {
+                mRwBinder.rwSendVoteAsset(mAssetId, mVoteType, mVoteValue, true);
+                return null;
+            } catch (Exception e) {
+                return mErrorMessage;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(String result) {
+            super.onPostExecute(result);
+            if (result != null) {
+                showMessage(result, true, false);
+            }
+        }
+    }
+
 }

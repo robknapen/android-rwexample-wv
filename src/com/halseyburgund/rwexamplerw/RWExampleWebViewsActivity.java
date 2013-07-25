@@ -38,7 +38,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.graphics.Bitmap;
 import android.media.AudioManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -49,6 +51,7 @@ import android.view.View;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebSettings.RenderPriority;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -81,6 +84,7 @@ public class RWExampleWebViewsActivity extends Activity {
 	private Button listenButton;
 	private Button speakButton;
 	private Button exitButton;
+    private Button prefsButton;
 	private TextView headerLine1TextView;
 	private TextView headerLine2TextView;
 	private ViewFlipper viewFlipper;
@@ -148,9 +152,12 @@ public class RWExampleWebViewsActivity extends Activity {
 			} else if (RW.CONTENT_LOADED.equals(intent.getAction())) {
 				String contentFileDir = rwBinder.getContentFilesDir();
 				if ((webView != null) && (contentFileDir != null)) {
-					String contentFileName = rwBinder.getContentFilesDir() + "home.html";
-					Log.d(TAG, "Content filename: " + contentFileName);
-					webView.loadUrl("file://" + contentFileName);
+// DEBUG:
+                    webView.loadUrl("http://halseyburgund.com/dev/rw/webview/sfms/home.html");
+
+//					String contentFileName = rwBinder.getContentFilesDir() + "home.html";
+//					Log.d(TAG, "Content filename: " + contentFileName);
+//					webView.loadUrl("file://" + contentFileName);
 				}
 			} else if (RW.USER_MESSAGE.equals(intent.getAction())) {
 				showMessage(intent.getStringExtra(RW.EXTRA_SERVER_MESSAGE), false, false);
@@ -353,7 +360,45 @@ public class RWExampleWebViewsActivity extends Activity {
 	    webSettings.setGeolocationEnabled(false);
 	    webSettings.setDatabaseEnabled(false);
 	    webSettings.setDomStorageEnabled(false);
-		
+
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                Log.d(TAG, "shouldOverrideUrlLoading");
+                return super.shouldOverrideUrlLoading(view, url);
+            }
+
+            @Override
+            public void onLoadResource(WebView view, String url) {
+                Log.d(TAG, "onLoadResource: " + url);
+                super.onLoadResource(view, url);
+            }
+
+            @Override
+            public void onScaleChanged(WebView view, float oldScale, float newScale) {
+                Log.d(TAG, "onScaleChanged");
+                super.onScaleChanged(view, oldScale, newScale);
+            }
+
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                Log.d(TAG, "onPageFinished");
+                super.onPageFinished(view, url);
+            }
+
+            @Override
+            public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                Log.d(TAG, "onPageStarted");
+                super.onPageStarted(view, url, favicon);
+            }
+
+            @Override
+            public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
+                Log.e(TAG, "Page load error: " + description);
+                super.onReceivedError(view, errorCode, description, failingUrl);
+            }
+        });
+
 		listenButton = (Button) findViewById(R.id.listen_button);
 		listenButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -369,6 +414,15 @@ public class RWExampleWebViewsActivity extends Activity {
 				startActivity(intent);
 			}
 		});
+
+        prefsButton = (Button) findViewById(R.id.prefs_button);
+        prefsButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent settingsActivity = new Intent(getBaseContext(), RWPreferenceActivity.class);
+                startActivity(settingsActivity);
+            }
+        });
 
 		exitButton = (Button) findViewById(R.id.exit_button);
 		exitButton.setOnClickListener(new View.OnClickListener() {

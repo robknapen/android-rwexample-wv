@@ -75,7 +75,7 @@
 	                android:textColor="@color/home_button_text_selector"
 	                />
 		    <LinearLayout
-		            android:layout_width="20dp"
+		            android:layout_width="10dp"
 		            android:layout_height="0dp"
 		            />
 	        <Button
@@ -90,9 +90,24 @@
 	                android:textColor="@color/home_button_text_selector"
 	                />
 		    <LinearLayout
-		            android:layout_width="20dp"
+		            android:layout_width="10dp"
 		            android:layout_height="0dp"
 		            />
+            <Button
+                    android:id="@+id/prefs_button"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="@drawable/home_selector"
+                    android:textAppearance="@android:style/TextAppearance.Large"
+                    android:textStyle="bold"
+                    android:text="@string/prefs"
+                    android:textColor="@color/home_button_text_selector"
+                    />
+            <LinearLayout
+                    android:layout_width="10dp"
+                    android:layout_height="0dp"
+                    />
 	        <Button
 	                android:id="@+id/exit_button"
 	                android:layout_width="fill_parent"

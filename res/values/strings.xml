@@ -23,6 +23,7 @@
     <string name="agree">I Agree</string>
     <string name="listen">Listen</string>
     <string name="speak">Speak</string>
+    <string name="prefs">Prefs</string>
     <string name="quit">Quit</string>
     <string name="record">Record</string>
     <string name="rerecord">Re-record</string>
@@ -54,6 +55,7 @@
     <string name="error_title">Roundware Error</string>
     <string name="message_title">Roundware Message</string>
     <string name="starting_playback_title">Starting Playback</string>
+    <string name="updating_stream_title">Updating Audio</string>
     <string name="sharing_subject">Roundware Sharing</string>
     <string name="sharing_chooser_title">Share Recording</string>
     <string name="thank_you_for_participating">Thank You for participating!</string>
@@ -68,6 +70,14 @@
     <string name="starting_playback_message">
         Waiting for audio from server, one moment please.
         </string>
+    <string name="playback_skip_ahead_message">
+        Skipping ahead. One moment please while the server
+        handles your request and updates the audio stream.
+    </string>
+    <string name="playback_replay_message">
+        Replay recording. One moment please while the server
+        handles your request and updates the audio stream.
+    </string>
     <string name="connecting_to_server_message">
         Establishing connection to the server, one moment 
         please.</string>
@@ -112,5 +122,22 @@
 		hear might no longer match your selections. Please
 		try selecting again, or restart the app and try again.
     	</string>
-        
+    <string name="skip_ahead_stream_problem">
+        Uh oh, there was a problem modifying the audio stream
+        probably due to connectivity issues. The audio you
+        hear may no longer match your selections. Please
+        try selecting again, or restart the app and try again.
+    </string>
+    <string name="play_asset_in_stream_problem">
+        Uh oh, there was a problem modifying the audio stream
+        probably due to connectivity issues. The audio you
+        hear may no longer match your selections. Please
+        try selecting again, or restart the app and try again.
+    </string>
+    <string name="vote_asset_problem">
+        Uh oh, there was a problem submitting your vote
+        probably due to connectivity issues. We apologize and
+        would appreciate it if you try again later.
+    </string>
+
 </resources>
