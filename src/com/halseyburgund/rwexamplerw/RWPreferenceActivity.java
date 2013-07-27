@@ -18,10 +18,8 @@
 
  	You should have received a copy of the GNU General Public License
  	along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/ 		
+*/
 package com.halseyburgund.rwexamplerw;
-
-import com.halseyburgund.rwexamplerw.R;
 
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
@@ -44,9 +42,9 @@ public class RWPreferenceActivity extends PreferenceActivity {
     public final static String ALWAYS_DOWNLOAD_WEB_CONTENT = "alwaysDownloadWebContent";
     public final static String USE_EXTERNAL_STORAGE_FOR_WEB_CONTENT = "useExternalStorageForWebContent";
 
-    
+
     @SuppressWarnings("deprecation")
-	@Override
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
